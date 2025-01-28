@@ -1,0 +1,87 @@
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+local enemyNames = game:GetService("ReplicatedStorage").Units.Noobs:GetChildren()
+
+local function EnforceTransparency(head)
+    -- Keep monitoring the transparency and reset if it changes
+    head:GetPropertyChangedSignal("Transparency"):Connect(function()
+        if head.Transparency ~= 0.9 then
+            head.Transparency = 0.9
+        end
+    end)
+end
+
+local function ResizeHead(instance)
+    if instance.Name == "APU" then
+        -- Skip processing for enemies named "APU"
+        return
+    end
+
+    for _, x in ipairs(enemyNames) do
+        if tostring(x) == instance.Name and instance ~= nil then
+            -- Wait for the "Head" part to exist
+            local head = instance:WaitForChild("Head", 5) -- Wait up to 5 seconds for the Head part
+            if head then
+                -- Enforce transparency
+                head.Transparency = 0.9
+                EnforceTransparency(head)
+
+                if instance.Name == "Jetpacker" then
+                    -- 
+                    head.Size = Vector3.new(5.0, 5.0, 5.0) -- Dont change
+                elseif instance.Name == "Sniper" then
+                    -- 
+                    head.Size = Vector3.new(5.0, 5.0, 5.0) -- Dont change
+                elseif instance.Name == "Prometheus" then
+                    -- 
+                    head.Size = Vector3.new(2.0, 2.0, 2.0) -- Prometheus head size
+                else
+				    -- Resize the head for other enemies to a default size
+                    head.Size = Vector3.new(8.0, 8.0, 8.0) -- for other enemy change here!
+                end
+
+                -- Additional settings for the head
+                head.Massless = true
+                head.CanCollide = false -- Disable collisions
+            else
+                warn("Head not found for instance:", instance.Name)
+            end
+        end
+    end
+end
+
+-- Resize heads for all existing enemies
+for _, v in ipairs(workspace:GetChildren()) do
+    task.wait()
+    ResizeHead(v)
+end
+
+-- Resize heads for newly added enemies
+workspace.ChildAdded:Connect(function(v)
+    task.wait()
+    ResizeHead(v)
+end)
+
+-- Assuming this is part of your existing script
+local function executeScript()
+    -- Your existing script logic here...
+
+    -- Send notification saying "Executed"
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Script Executed",
+        Text = "The script has been executed successfully!",
+        Duration = 5
+    })
+
+    -- Send notification saying "Have fun" and credit the script creator
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Have Fun!",
+        Text = "Script made by DeathShot",
+        Duration = 5
+    })
+end
+
+-- Call the function to execute the script
+executeScript()
