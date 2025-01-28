@@ -1,0 +1,313 @@
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local CombinedButton = Instance.new("TextButton")
+local DropdownFrame = Instance.new("Frame")
+local UIListLayout = Instance.new("UIListLayout")
+local SearchBox = Instance.new("TextBox")
+local AmmoBox = Instance.new("TextBox")
+local FirerateBox = Instance.new("TextBox")
+local BulletSpeedBox = Instance.new("TextBox")
+local SpreadBox = Instance.new("TextBox")
+local Button = Instance.new("TextButton")
+local ModifyWithoutAmmoButton = Instance.new("TextButton") -- New button for modify without ammo
+local UICorner = Instance.new("UICorner")
+
+-- Parent the GUI to PlayerGui to ensure it stays after respawn
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Creating the ScreenGui in PlayerGui
+ScreenGui.Parent = playerGui
+ScreenGui.Enabled = true
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+
+-- Frame Styling (smaller size)
+Frame.Parent = ScreenGui
+Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Frame.BorderSizePixel = 0
+Frame.Size = UDim2.new(0, 250, 0, 350)  -- Smaller frame size
+Frame.Position = UDim2.new(0.5, -125, 0.5, -175)  -- Adjusted position for smaller size
+Frame.Active = true
+UICorner.Parent = Frame
+UICorner.CornerRadius = UDim.new(0, 10)
+
+-- Combined Button Styling
+CombinedButton.Parent = Frame
+CombinedButton.Text = "Search/Select Weapon"
+CombinedButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+CombinedButton.Size = UDim2.new(0.8, 0, 0.1, 0)
+CombinedButton.Position = UDim2.new(0.1, 0, 0.1, 0)
+CombinedButton.TextScaled = true
+local ButtonCorner = UICorner:Clone()
+ButtonCorner.Parent = CombinedButton
+
+-- Dropdown Frame Styling
+DropdownFrame.Parent = Frame
+DropdownFrame.BackgroundColor3 = Color3.fromRGB(64, 64, 64)
+DropdownFrame.Size = UDim2.new(0, 130, 0, 0)  -- Smaller dropdown width
+DropdownFrame.Position = UDim2.new(0.9, 0, 0.1, 0)
+DropdownFrame.Visible = false
+DropdownFrame.ClipsDescendants = true
+local DropdownCorner = UICorner:Clone()
+DropdownCorner.Parent = DropdownFrame
+
+-- Dropdown Layout
+UIListLayout.Parent = DropdownFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- Search Box Styling
+SearchBox.Parent = DropdownFrame
+SearchBox.PlaceholderText = "Search..."
+SearchBox.BackgroundColor3 = Color3.new(1, 1, 1)
+SearchBox.TextColor3 = Color3.new(0, 0, 0)
+SearchBox.Size = UDim2.new(1, 0, 0, 20)  -- Smaller search box height
+SearchBox.TextScaled = true
+local SearchCorner = UICorner:Clone()
+SearchCorner.Parent = SearchBox
+
+-- TextLabels for specific attributes (Firerate, Ammo, BulletSpeed, Spread)
+local function setupLabelAndTextBox(labelText, box, placeholder, position)
+    local label = Instance.new("TextLabel")
+    label.Parent = Frame
+    label.Text = labelText
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.BackgroundTransparency = 1
+    label.Size = UDim2.new(0.2, 0, 0.1, 0) -- Label size
+    label.Position = UDim2.new(0.1, 0, position.Y.Scale, position.Y.Offset)
+
+    box.Parent = Frame
+    box.PlaceholderText = placeholder
+    box.BackgroundColor3 = Color3.new(1, 1, 1)
+    box.TextColor3 = Color3.new(0, 0, 0)
+    box.Size = UDim2.new(0.6, 0, 0.1, 0)  -- Adjusted width for the textbox
+    box.Position = UDim2.new(0.3, 0, position.Y.Scale, position.Y.Offset) -- Positioned next to the label
+    box.TextScaled = true
+    local BoxCorner = UICorner:Clone()
+    BoxCorner.Parent = box
+end
+
+-- Adding Labels and TextBoxes for specific attributes
+setupLabelAndTextBox("Ammo", AmmoBox, "Ammo", UDim2.new(0.1, 0, 0.3, 0))
+setupLabelAndTextBox("Firerate", FirerateBox, "Firerate", UDim2.new(0.1, 0, 0.4, 0))
+setupLabelAndTextBox("BulletSpeed", BulletSpeedBox, "BulletSpeed", UDim2.new(0.1, 0, 0.5, 0))
+setupLabelAndTextBox("Spread", SpreadBox, "Spread", UDim2.new(0.1, 0, 0.6, 0))
+
+-- Modify Weapon Button
+Button.Parent = Frame
+Button.Text = "Modify Weapon"
+Button.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+Button.Size = UDim2.new(0.8, 0, 0.1, 0)
+Button.Position = UDim2.new(0.1, 0, 0.7, 0)  -- Slightly adjusted for smaller size
+Button.TextScaled = true
+local ModifyButtonCorner = UICorner:Clone()
+ModifyButtonCorner.Parent = Button
+
+-- New Button for Modify Without Ammo
+ModifyWithoutAmmoButton.Parent = Frame
+ModifyWithoutAmmoButton.Text = "Modify Without Ammo"
+ModifyWithoutAmmoButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+ModifyWithoutAmmoButton.Size = UDim2.new(0.8, 0, 0.1, 0)
+ModifyWithoutAmmoButton.Position = UDim2.new(0.1, 0, 0.8, 0)  -- Adjusted for smaller size
+ModifyWithoutAmmoButton.TextScaled = true
+local ModifyWithoutAmmoButtonCorner = UICorner:Clone()
+ModifyWithoutAmmoButtonCorner.Parent = ModifyWithoutAmmoButton
+
+-- Complete Weapon List
+local weapons = {
+    "Akimbo",
+    "Voltaic Impact",
+    "Gunslingers",
+    "Burst Rifle",
+    "Stonewall",
+    "Steelforge",
+    "DMR",
+    "Gift of Fire",
+    "Armour Peeler",
+    "Medical Bow",
+    "Recurve",
+    "Vitabow",
+    "Rifle",
+    "Bolter",
+    "Harpoon Gun",
+    "RPG",
+    "Rocket Stormer",
+    "Shockwave Device",
+    "Shotgun",
+    "Hallsweeper",
+    "Sprinter's Streak",
+    "SMG",
+    "Loose Trigger",
+    "Twinface",
+    "Mastermind's Rifle"
+}
+
+local selectedWeapon
+
+-- Dropdown Functionality
+local function createDropdownButtons(filterText)
+    for _, child in pairs(DropdownFrame:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+
+    for _, weapon in pairs(weapons) do
+        if not filterText or string.find(string.lower(weapon), string.lower(filterText)) then
+            local button = Instance.new("TextButton")
+            button.Text = weapon
+            button.Parent = DropdownFrame
+            button.Size = UDim2.new(1, 0, 0, 20)  -- Smaller button height
+            button.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+            button.TextScaled = true
+            local WeaponButtonCorner = UICorner:Clone()
+            WeaponButtonCorner.Parent = button
+
+            button.MouseButton1Click:Connect(function()
+                CombinedButton.Text = weapon
+                selectedWeapon = weapon
+                DropdownFrame.Visible = false
+            end)
+        end
+    end
+
+    DropdownFrame.Size = UDim2.new(0, 130, 0, #DropdownFrame:GetChildren() * 20)  -- Smaller dropdown size
+end
+
+CombinedButton.MouseButton1Click:Connect(function()
+    DropdownFrame.Visible = not DropdownFrame.Visible
+    createDropdownButtons(SearchBox.Text)
+end)
+
+SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    if DropdownFrame.Visible then
+        createDropdownButtons(SearchBox.Text)
+    end
+end)
+
+-- Apply Weapon Attributes
+Button.MouseButton1Click:Connect(function()
+    if selectedWeapon then
+        local lp = game.Players.LocalPlayer.Character
+        if lp:FindFirstChild(selectedWeapon) then
+            local weapon = lp[selectedWeapon]
+
+            -- Update attributes with provided values
+            weapon:SetAttribute("Ammo", tonumber(AmmoBox.Text) or 0)
+            weapon:SetAttribute("Firerate", tonumber(FirerateBox.Text) or 0)
+            weapon:SetAttribute("BulletSpeed", tonumber(BulletSpeedBox.Text) or 0)
+            weapon:SetAttribute("Spread", tonumber(SpreadBox.Text) or 0)
+
+            -- Listen for Ammo attribute changes dynamically
+            weapon:GetAttributeChangedSignal("Ammo"):Connect(function()
+                print("Ammo for " .. selectedWeapon .. " has changed!")
+                -- Automatically set Ammo to 999 if it changes
+                weapon:SetAttribute("Ammo", tonumber(AmmoBox.Text))
+            end)
+
+            -- Similarly, listen for Firerate or other attributes if necessary
+            weapon:GetAttributeChangedSignal("Firerate"):Connect(function()
+                print("Firerate for " .. selectedWeapon .. " has changed!")
+            end)
+
+            -- Handle additional attributes if needed
+        else
+            warn("Weapon not found in the player's character: " .. selectedWeapon)
+        end
+    else
+        warn("No weapon selected.")
+    end
+end)
+
+-- Apply Weapon Attributes (Without Ammo)
+ModifyWithoutAmmoButton.MouseButton1Click:Connect(function()
+    if selectedWeapon then
+        local lp = game.Players.LocalPlayer.Character
+        if lp:FindFirstChild(selectedWeapon) then
+            local weapon = lp[selectedWeapon]
+
+            -- Update attributes without changing Ammo
+            weapon:SetAttribute("Firerate", tonumber(FirerateBox.Text) or 0)
+            weapon:SetAttribute("BulletSpeed", tonumber(BulletSpeedBox.Text) or 0)
+            weapon:SetAttribute("Spread", tonumber(SpreadBox.Text) or 0)
+        else
+            warn("Weapon not found in the player's character: " .. selectedWeapon)
+        end
+    else
+        warn("No weapon selected.")
+    end
+end)
+
+-- Dragging GUI
+local dragging
+local dragStart
+local startPos
+local UserInputService = game:GetService("UserInputService")
+
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+    end
+end)
+
+Frame.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+Frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- Toggle visibility with "P"
+local isGuiVisible = true
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.P then
+        isGuiVisible = not isGuiVisible
+        ScreenGui.Enabled = isGuiVisible
+    end
+end)
+
+-- Ensure GUI stays after respawn
+player.CharacterAdded:Connect(function()
+    -- Re-enable the GUI when the player respawns
+    ScreenGui.Enabled = true
+end)
+
+-- If Player is already alive, the GUI stays on screen
+if player.Character then
+    ScreenGui.Enabled = true
+end
+
+-- Assuming this is part of your existing script
+local function executeScript()
+    -- Your existing script logic here...
+
+    -- Send notification saying "Executed"
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Script Executed",
+        Text = "The script has been executed successfully!",
+        Duration = 5
+    })
+
+    -- Send notification saying "Have fun" and credit the script creator
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Have Fun!",
+        Text = "Script made by DeathShot",
+        Duration = 5
+    })
+	
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "GUI Instructions",
+    Text = "Press 'P' to hide/unhide the GUI.",
+    Duration = 7
+    })
+end
+
+-- Call the function to execute the script
+executeScript()
