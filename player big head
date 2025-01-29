@@ -1,9 +1,26 @@
-local BigHeadSize = 10
-local NormalHeadSize = Vector3.new(1, 1, 1)
-local ToolsToAffect = {"Medical Bow", "Recurve", "Vitabow" "Mastermind's Rifle",}
+-- Use _G to store global settings
+_G.BigHeadSize = _G.BigHeadSize or 10  -- Default to 10 if not set
+_G.NormalHeadSize = _G.NormalHeadSize or Vector3.new(1, 1, 1)
+_G.Transparent = _G.Transparent or 0  -- Default to 0 if not set
 
--- Executor-friendly script that runs on the client's side.
+_G.ToolsToAffect = _G.ToolsToAffect or {"Medical Bow", "Recurve", "Vitabow", "Mastermind's Rifle"}
+
+-- Executor-friendly script that runs on the client's side
+local HttpService = game:GetService("HttpService")
 local player = game.Players.LocalPlayer
+
+-- URL of the config JSON on GitHub
+local configUrl = "https://raw.githubusercontent.com/OneDEVICE-creator/Dvn-script/main/config.json"
+
+-- Fetch the config data from GitHub
+local configData = HttpService:GetAsync(configUrl)
+local config = HttpService:JSONDecode(configData)
+
+-- Override _G settings with the values from GitHub config
+_G.BigHeadSize = config.BigHeadSize or _G.BigHeadSize
+_G.Transparent = config.Transparent or _G.Transparent
+
+-- Function to check if the player has a head
 local function checkHead(player)
     local character = player.Character
     if character and character:FindFirstChild("Head") then
@@ -20,7 +37,7 @@ game:GetService('RunService').RenderStepped:Connect(function()
     local usingCorrectTool = false
     local equippedTool = player.Character:FindFirstChildOfClass("Tool")
     if equippedTool then
-        for _, toolName in ipairs(ToolsToAffect) do
+        for _, toolName in ipairs(_G.ToolsToAffect) do
             if equippedTool.Name == toolName then
                 usingCorrectTool = true
                 break
@@ -34,16 +51,16 @@ game:GetService('RunService').RenderStepped:Connect(function()
             local otherHead = checkHead(otherPlayer)
             if otherHead then
                 if usingCorrectTool then
-                    otherHead.Size = Vector3.new(BigHeadSize, BigHeadSize, BigHeadSize)
-                    otherHead.Transparency = 0.5
-                    otherHead.BrickColor = BrickColor.new("Red")
+                    otherHead.Size = Vector3.new(_G.BigHeadSize, _G.BigHeadSize, _G.BigHeadSize)
+                    otherHead.Transparency = _G.Transparent
+                    otherHead.BrickColor = BrickColor.new("cyan")
                     otherHead.Material = "Neon"
                     otherHead.CanCollide = false
                     otherHead.Massless = true
                 else
-                    otherHead.Size = NormalHeadSize
+                    otherHead.Size = _G.NormalHeadSize
                     otherHead.Transparency = 0
-                    otherHead.BrickColor = BrickColor.new("Bright red")
+                    otherHead.BrickColor = BrickColor.new("cyan")
                     otherHead.Material = Enum.Material.Plastic
                     otherHead.CanCollide = false
                     otherHead.Massless = false
@@ -53,7 +70,7 @@ game:GetService('RunService').RenderStepped:Connect(function()
     end
 end)
 
--- Assuming this is part of your existing script
+-- Function to execute the script
 local function executeScript()
     -- Your existing script logic here...
 
