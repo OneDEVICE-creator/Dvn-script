@@ -1,0 +1,76 @@
+local BigHeadSize = 10
+local NormalHeadSize = Vector3.new(1, 1, 1)
+local ToolsToAffect = {"Medical Bow", "Recurve", "Vitabow" "Mastermind's Rifle",}
+
+-- Executor-friendly script that runs on the client's side.
+local player = game.Players.LocalPlayer
+local function checkHead(player)
+    local character = player.Character
+    if character and character:FindFirstChild("Head") then
+        return character.Head
+    end
+    return nil
+end
+
+game:GetService('RunService').RenderStepped:Connect(function()
+    -- Ensure player and head exist
+    if not player or not player.Character or not player.Character:FindFirstChild("Head") then return end
+
+    -- Check if player is using the correct tool
+    local usingCorrectTool = false
+    local equippedTool = player.Character:FindFirstChildOfClass("Tool")
+    if equippedTool then
+        for _, toolName in ipairs(ToolsToAffect) do
+            if equippedTool.Name == toolName then
+                usingCorrectTool = true
+                break
+            end
+        end
+    end
+
+    -- Iterate through other players and modify head properties
+    for _, otherPlayer in ipairs(game:GetService('Players'):GetPlayers()) do
+        if otherPlayer ~= player then
+            local otherHead = checkHead(otherPlayer)
+            if otherHead then
+                if usingCorrectTool then
+                    otherHead.Size = Vector3.new(BigHeadSize, BigHeadSize, BigHeadSize)
+                    otherHead.Transparency = 0.5
+                    otherHead.BrickColor = BrickColor.new("Red")
+                    otherHead.Material = "Neon"
+                    otherHead.CanCollide = false
+                    otherHead.Massless = true
+                else
+                    otherHead.Size = NormalHeadSize
+                    otherHead.Transparency = 0
+                    otherHead.BrickColor = BrickColor.new("Bright red")
+                    otherHead.Material = Enum.Material.Plastic
+                    otherHead.CanCollide = false
+                    otherHead.Massless = false
+                end
+            end
+        end
+    end
+end)
+
+-- Assuming this is part of your existing script
+local function executeScript()
+    -- Your existing script logic here...
+
+    -- Send notification saying "Executed"
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Script Executed",
+        Text = "The script has been executed successfully!",
+        Duration = 5
+    })
+
+    -- Send notification saying "Have fun" and credit the script creator
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Have Fun!",
+        Text = "Script made by DeathShot",
+        Duration = 5
+    })
+end
+
+-- Call the function to execute the script
+executeScript()
