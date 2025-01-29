@@ -36,14 +36,14 @@ game:GetService('RunService').RenderStepped:Connect(function()
                 if usingCorrectTool then
                     otherHead.Size = Vector3.new(BigHeadSize, BigHeadSize, BigHeadSize)
                     otherHead.Transparency = _G.otherHead.Transparency or  0.8
-                    otherHead.BrickColor = BrickColor.new("Red")
+                    otherHead.BrickColor = BrickColor.new("Cyan")
                     otherHead.Material = "Neon"
                     otherHead.CanCollide = false
                     otherHead.Massless = true
                 else
                     otherHead.Size = NormalHeadSize
                     otherHead.Transparency = 0
-                    otherHead.BrickColor = BrickColor.new("Bright red")
+                    otherHead.BrickColor = BrickColor.new("Cyan")
                     otherHead.Material = Enum.Material.Plastic
                     otherHead.CanCollide = false
                     otherHead.Massless = false
