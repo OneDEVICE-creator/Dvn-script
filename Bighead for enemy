@@ -15,7 +15,6 @@ end
 
 local function ResizeHead(instance)
     if instance.Name == "APU" or not _G.ScriptEnabled then return end -- Stop if disabled
-
     for _, x in ipairs(enemyNames) do
         if tostring(x) == instance.Name and instance:FindFirstChild("Head") then
             local head = instance.Head
@@ -72,5 +71,23 @@ task.spawn(function()
     end
 end)
 
+-- **Toggle Notification**
+local function executeScript()
+    if _G.ScriptEnabled then
+        Rayfield:Notify({
+            Title = "Big Heads",
+            Content = "Big Heads Enabled!",
+            Duration = 3,
+            Image = nil, 
+        })
+    else
+        Rayfield:Notify({
+            Title = "Big Heads",
+            Content = "Big Heads Disabled!",
+            Duration = 3,
+            Image = nil, 
+        })
+    end
+end
 
 executeScript()
