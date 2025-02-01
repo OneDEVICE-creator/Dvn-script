@@ -3,7 +3,7 @@ if game.PlaceId == 8657806289 then
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "DEATH HUB😼",
+   Name = "Death Hub 😼",
    Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
    LoadingTitle = "Wait",
    LoadingSubtitle = "by DeathShot",
@@ -63,7 +63,7 @@ local MainButton = MainTab:CreateButton({
 
 local MainSlider1 = MainTab:CreateSlider({
    Name = "Enemy Head Size",
-   Range = {1, 20}, -- Adjust the range as needed
+   Range = {1, 30}, -- Adjust the range as needed
    Increment = 0.5,
    Suffix = "",
    CurrentValue = _G.EnemiesHeadSize or 8.0,
