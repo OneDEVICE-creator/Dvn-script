@@ -1,11 +1,6 @@
--- Game ID check
-local allowedGameId = 8657806289  -- Game ID for "Dummies vs Noob"
+if game.PlaceId == 8657806289 then
 
-if game.PlaceId == allowedGameId then
-    -- Only proceed if the script is in the correct game
-    print("Script is running in Dummies vs Noob!")
-    
-local Rayfield = loadstring(game:HttpGet('https://[Log in to view URL]'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "DEATH HUB😼",
@@ -19,7 +14,7 @@ local Window = Rayfield:CreateWindow({
 
    ConfigurationSaving = {
       Enabled = true,
-      FolderName = nil, -- Create a custom folder for your hub/game
+      FolderName = Death Hun, -- Create a custom folder for your hub/game
       FileName = "Death Hub"
    },
 
@@ -41,6 +36,9 @@ local Window = Rayfield:CreateWindow({
    }
 })
 
+local MainTab = Window:CreateTab("Main", nil)
+local MainSection = MainTab:CreateSection("Dvn-Script")
+
 Rayfield:Notify({
    Title = "Script Executed",
    Content = "The script has been executed successfully!",
@@ -55,18 +53,17 @@ Rayfield:Notify({
    Image = 4483362458,
 })
 
-local MainTab = MainWindow:CreateTab("Main", nil)
-local MainSection = MainTab:CreateSection("Dvn Script")
-local Button = MainTab:CreateButton({
+
+local MainButton = MainTab:CreateButton({
    Name = "Gun Mod Gui",
    Callback = function()
-   loadstring(game:HttpGet("https://[Log in to view URL]"))()
+   loadstring(game:HttpGet("https://raw.githubusercontent.com/OneDEVICE-creator/Dvn-script/main/Gun%20mod"))()
    end,
 })
 
-local Slider1 = MainTab:CreateSlider({
+local MainSlider1 = MainTab:CreateSlider({
    Name = "Enemy Head Size",
-   Range = {1, 10}, -- Adjust the range as needed
+   Range = {1, 20}, -- Adjust the range as needed
    Increment = 0.5,
    Suffix = "",
    CurrentValue = _G.EnemiesHeadSize or 8.0,
@@ -76,7 +73,7 @@ local Slider1 = MainTab:CreateSlider({
    end,
 })
 
-local Slider2 = MainTab:CreateSlider({
+local MainSlider2 = MainTab:CreateSlider({
    Name = "Prometheus Head Size",
    Range = {1, 10},
    Increment = 0.5,
@@ -88,7 +85,7 @@ local Slider2 = MainTab:CreateSlider({
    end,
 })
 
-local Slider3 = MainTab:CreateSlider({
+local MainSlider3 = MainTab:CreateSlider({
    Name = "Transparency",
    Range = {0, 1},
    Increment = 0.1,
@@ -109,7 +106,7 @@ local Toggle = MainTab:CreateToggle({
        
        if Value then
            -- Run the external script when enabled
-           loadstring(game:HttpGet("https://[Log in to view URL]"))()
+           loadstring(game:HttpGet("https://raw.githubusercontent.com/OneDEVICE-creator/Dvn-script/main/Bighead%20for%20enemy"))()
            
            -- Show notification for ON
            Rayfield:Notify({
@@ -137,3 +134,4 @@ local Toggle = MainTab:CreateToggle({
        end
    end,
 })
+
