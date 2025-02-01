@@ -3,50 +3,45 @@ if not game:IsLoaded() then
 end
 
 local enemyNames = game:GetService("ReplicatedStorage").Units.Noobs:GetChildren()
-
--- Default values from _G variables
-local enemiesHeadSize = _G.EnemiesHeadSize or 8.0
-local prometheusHeadSize = _G.PrometheusHeadSize or 2.0
-local transparency = _G.Transparency or 0.9
+_G.ScriptEnabled = _G.ScriptEnabled or true -- Default ON
 
 local function EnforceTransparency(head)
-    -- Keep monitoring the transparency and reset if it changes
     head:GetPropertyChangedSignal("Transparency"):Connect(function()
-        if head.Transparency ~= transparency then
-            head.Transparency = transparency
+        if _G.ScriptEnabled then
+            head.Transparency = _G.Transparency or 0.9
         end
     end)
 end
 
 local function ResizeHead(instance)
-    if instance.Name == "APU" then
-        -- Skip processing for enemies named "APU"
-        return
-    end
+    if instance.Name == "APU" or not _G.ScriptEnabled then return end -- Stop if disabled
 
     for _, x in ipairs(enemyNames) do
-        if tostring(x) == instance.Name and instance ~= nil then
-            -- Wait for the "Head" part to exist
-            local head = instance:WaitForChild("Head", 5) -- Wait up to 5 seconds for the Head part
-            if head then
-                -- Enforce transparency
-                head.Transparency = transparency
-                EnforceTransparency(head)
-
-                if instance.Name == "Jetpacker" or instance.Name == "Sniper" then
-                    head.Size = Vector3.new(5.0, 5.0, 5.0) -- Don't change
-                elseif instance.Name == "Prometheus" then
-                    head.Size = Vector3.new(prometheusHeadSize, prometheusHeadSize, prometheusHeadSize) -- Prometheus head size
-                else
-                    head.Size = Vector3.new(enemiesHeadSize, enemiesHeadSize, enemiesHeadSize) -- For other enemies
-                end
-
-                -- Additional settings for the head
-                head.Massless = true
-                head.CanCollide = false -- Disable collisions
-            else
-                warn("Head not found for instance:", instance.Name)
+        if tostring(x) == instance.Name and instance:FindFirstChild("Head") then
+            local head = instance.Head
+            
+            -- Reset head if script is disabled
+            if not _G.ScriptEnabled then
+                head.Size = Vector3.new(1, 1, 1) -- Default size
+                head.Transparency = 0
+                return
             end
+
+            -- Apply transparency enforcement
+            head.Transparency = _G.Transparency or 0.9
+            EnforceTransparency(head)
+
+            -- Adjust head size dynamically
+            if instance.Name == "Jetpacker" or instance.Name == "Sniper" then
+                head.Size = Vector3.new(5.0, 5.0, 5.0) -- Fixed size
+            elseif instance.Name == "Prometheus" then
+                head.Size = Vector3.new(_G.PrometheusHeadSize or 2.0, _G.PrometheusHeadSize or 2.0, _G.PrometheusHeadSize or 2.0)
+            else
+                head.Size = Vector3.new(_G.EnemiesHeadSize or 8.0, _G.EnemiesHeadSize or 8.0, _G.EnemiesHeadSize or 8.0)
+            end
+            
+            head.Massless = true
+            head.CanCollide = false
         end
     end
 end
@@ -63,20 +58,19 @@ workspace.ChildAdded:Connect(function(v)
     ResizeHead(v)
 end)
 
--- Notification when the script is executed
-local function executeScript()
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Script Executed",
-        Text = "The script has been executed successfully!",
-        Duration = 5
-    })
+-- **Real-Time Update Loop**
+task.spawn(function()
+    while true do
+        if _G.ScriptEnabled then
+            for _, v in ipairs(workspace:GetChildren()) do
+                if v:FindFirstChild("Head") then
+                    ResizeHead(v)
+                end
+            end
+        end
+        wait(0.5) -- Update every 0.5 seconds
+    end
+end)
 
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Have Fun!",
-        Text = "Script made by DeathShot",
-        Duration = 5
-    })
-end
 
--- Call the function to execute the script
 executeScript()
