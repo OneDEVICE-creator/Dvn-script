@@ -14,7 +14,7 @@ local Window = Rayfield:CreateWindow({
 
    ConfigurationSaving = {
       Enabled = true,
-      FolderName = Death Hun, -- Create a custom folder for your hub/game
+      FolderName = nil, -- Create a custom folder for your hub/game
       FileName = "Death Hub"
    },
 
@@ -135,3 +135,4 @@ local Toggle = MainTab:CreateToggle({
    end,
 })
 
+end
