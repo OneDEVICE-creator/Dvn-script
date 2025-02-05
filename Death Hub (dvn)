@@ -34,3 +34,73 @@ if game.PlaceId == 8657806289 then
         Range = {1, 30},
         Increment = 0.5,
         CurrentValue = _G.EnemiesHeadSize or 8.0,
+        Callback = function(Value)
+            _G.EnemiesHeadSize = Value
+        end,
+    })
+    local MainSlider1 = MainTab:CreateSlider({
+        Name = "Prometheus Head Size",
+        Range = {1, 10},
+        Increment = 0.5,
+        CurrentValue = _G.PrometheusHeadSize or 6.0,
+        Callback = function(Value)
+            _G.PrometheusHeadSize = Value
+        end,
+    })
+    
+    local MainSlider2 = MainTab:CreateSlider({
+        Name = "Sniper Head Size",
+        Range = {1, 10},
+        Increment = 0.5,
+        CurrentValue = _G.SniperHeadSize or 6.0,
+        Callback = function(Value)
+            _G.SniperHeadSize = Value
+        end,
+    })
+    
+    local MainSlider3 = MainTab:CreateSlider({
+        Name = "Transparency",
+        Range = {0, 1},
+        Increment = 0.1,
+        CurrentValue = _G.Transparency or 0.9,
+        Callback = function(Value)
+            _G.Transparency = Value
+        end,
+    })
+    
+    -- Toggle for Big Head Script
+    local Toggle = MainTab:CreateToggle({
+        Name = "Enable Big Heads",
+        CurrentValue = false,
+        Callback = function(Value)
+            _G.ScriptEnabled = Value
+            
+            if Value then
+                -- Load the Big Head script
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/OneDEVICE-creator/Dvn-script/main/Bighead%20for%20enemy"))()
+                
+                Rayfield:Notify({
+                    Title = "Big Heads",
+                    Content = "Big Heads Enabled!",
+                    Duration = 3,
+                })
+            else
+                -- Reset enemy heads
+                for _, v in ipairs(workspace:GetChildren()) do
+                    if v:IsA("Model") and v:FindFirstChild("Head") and not v:FindFirstChildOfClass("Humanoid") then
+                        local head = v.Head
+                        head.Size = Vector3.new(1, 1, 1)
+                        head.Transparency = 0
+                    end
+                end
+
+                Rayfield:Notify({
+                    Title = "Big Heads",
+                    Content = "Big Heads Disabled!",
+                    Duration = 3,
+                })
+            end
+        end,
+    })
+    
+end
