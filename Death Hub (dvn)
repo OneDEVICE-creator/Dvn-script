@@ -38,14 +38,23 @@ if game.PlaceId == 8657806289 then
             _G.EnemiesHeadSize = Value
         end,
     })
+    local MainSlider1 = MainTab:CreateSlider({
+        Name = "Enemy Head Size",
+        Range = {1, 30},
+        Increment = 0.5,
+        CurrentValue = _G.EnemiesHeadSize or 8.0,
+        Callback = function(Value)
+            _G.EnemiesHeadSize = Value
+        end,
+    })
     
     local MainSlider2 = MainTab:CreateSlider({
-        Name = "Prometheus Head Size",
+        Name = "Sniper Head Size",
         Range = {1, 10},
         Increment = 0.5,
-        CurrentValue = _G.PrometheusHeadSize or 4.0,
+        CurrentValue = _G.SniperHeadSize or 6.0,
         Callback = function(Value)
-            _G.PrometheusHeadSize = Value
+            _G.SniperHeadSize = Value
         end,
     })
     
