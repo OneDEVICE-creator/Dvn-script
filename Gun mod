@@ -297,11 +297,6 @@ InfAmmoButton.MouseButton1Click:Connect(function()
                 weapon:SetAttribute("Ammo", tonumber(AmmoBox.Text))
             end)
 
-            -- Similarly, listen for Firerate or other attributes if necessary
-            weapon:GetAttributeChangedSignal("Firerate"):Connect(function()
-                print("Firerate for " .. selectedWeapon .. " has changed!")
-            end)
-
             -- Handle additional attributes if needed
         else
             warn("Weapon not found in the player's character: " .. selectedWeapon)
