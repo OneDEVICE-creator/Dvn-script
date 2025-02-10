@@ -143,7 +143,7 @@ if game.PlaceId == 8657806289 then
     local spreadValue = 0
 
     GunModTab:CreateInput({
-        Name = "Firerate (any)",
+        Name = "Firerate",
         CurrentValue = tostring(firerateValue),
         PlaceholderText = "Enter Firerate",
         RemoveTextAfterFocusLost = false,
@@ -157,7 +157,7 @@ if game.PlaceId == 8657806289 then
     })
 
     GunModTab:CreateInput({
-        Name = "Bullet Speed (req 9999)",
+        Name = "Bullet Speed",
         CurrentValue = tostring(bulletSpeedValue),
         PlaceholderText = "Enter Bullet Speed",
         RemoveTextAfterFocusLost = false,
@@ -171,7 +171,7 @@ if game.PlaceId == 8657806289 then
     })
 
     GunModTab:CreateInput({
-        Name = "Spread (req 0-1)",
+        Name = "Spread",
         CurrentValue = tostring(spreadValue),
         PlaceholderText = "Enter Spread",
         RemoveTextAfterFocusLost = false,
@@ -187,36 +187,28 @@ if game.PlaceId == 8657806289 then
     GunModTab:CreateButton({
         Name = "Modify Gun",
         Callback = function()
-            if lastWpn then
-                char = player.Character or player.CharacterAdded:Wait()
-                if char:FindFirstChild(lastWpn) then
-                    local gun = char[lastWpn]
-                    gun:GetAttributeChangedSignal("Ammo"):Connect(function()
-                        print("Ammo for " .. lastWpn .. " has changed!")
-                        -- Automatically set Ammo to 999 if it changes
-                        gun:SetAttribute("Ammo", 999)
-                    end)
-                    gun:SetAttribute("Firerate", firerateValue)
-                    gun:SetAttribute("BulletSpeed", bulletSpeedValue)
-                    gun:SetAttribute("Spread", spreadValue)
-                    Rayfield:Notify({
-                        Title = "Gun Modified",
-                        Content = "Modified " .. lastWpn .. " successfully!",
-                        Duration = 3,
-                    })
-                else
-                    warn("Weapon not found: " .. lastWpn)
-                    Rayfield:Notify({
-                        Title = "Error",
-                        Content = "Weapon not found: " .. lastWpn,
-                        Duration = 3,
-                    })
-                end
+            local player = game.Players.LocalPlayer
+            local char = player.Character or player.CharacterAdded:Wait()
+            if lastWpn and char:FindFirstChild(lastWpn) then
+                local gun = char[lastWpn]
+                gun:GetAttributeChangedSignal("Ammo"):Connect(function()
+                    print("Ammo for " .. lastWpn .. " has changed!")
+                    -- Automatically set Ammo to 999 if it changes
+                    gun:SetAttribute("Ammo", 999)
+                end)
+                gun:SetAttribute("Firerate", firerateValue)
+                gun:SetAttribute("BulletSpeed", bulletSpeedValue)
+                gun:SetAttribute("Spread", spreadValue)
+                Rayfield:Notify({
+                    Title = "Gun Modified",
+                    Content = "Modified " .. lastWpn .. " successfully!",
+                    Duration = 3,
+                })
             else
-                warn("No weapon detected.")
+                warn("No weapon detected or weapon not found: " .. tostring(lastWpn))
                 Rayfield:Notify({
                     Title = "Error",
-                    Content = "No weapon detected.",
+                    Content = "No weapon detected or weapon not found.",
                     Duration = 3,
                 })
             end
@@ -226,32 +218,24 @@ if game.PlaceId == 8657806289 then
     GunModTab:CreateButton({
         Name = "Modify Without Ammo",
         Callback = function()
-            if lastWpn then
-                char = player.Character or player.CharacterAdded:Wait()
-                if char:FindFirstChild(lastWpn) then
-                    local gun = char[lastWpn]
-                    -- Modify all except Ammo
-                    gun:SetAttribute("Firerate", firerateValue)
-                    gun:SetAttribute("BulletSpeed", bulletSpeedValue)
-                    gun:SetAttribute("Spread", spreadValue)
-                    Rayfield:Notify({
-                        Title = "Gun Modified",
-                        Content = "Modified " .. lastWpn .. " without changing ammo!",
-                        Duration = 3,
-                    })
-                else
-                    warn("Weapon not found: " .. lastWpn)
-                    Rayfield:Notify({
-                        Title = "Error",
-                        Content = "Weapon not found: " .. lastWpn,
-                        Duration = 3,
-                    })
-                end
+            local player = game.Players.LocalPlayer
+            local char = player.Character or player.CharacterAdded:Wait()
+            if lastWpn and char:FindFirstChild(lastWpn) then
+                local gun = char[lastWpn]
+                -- Modify all except Ammo
+                gun:SetAttribute("Firerate", firerateValue)
+                gun:SetAttribute("BulletSpeed", bulletSpeedValue)
+                gun:SetAttribute("Spread", spreadValue)
+                Rayfield:Notify({
+                    Title = "Gun Modified",
+                    Content = "Modified " .. lastWpn .. " without changing ammo!",
+                    Duration = 3,
+                })
             else
-                warn("No weapon detected.")
+                warn("No weapon detected or weapon not found: " .. tostring(lastWpn))
                 Rayfield:Notify({
                     Title = "Error",
-                    Content = "No weapon detected.",
+                    Content = "No weapon detected or weapon not found.",
                     Duration = 3,
                 })
             end
@@ -259,34 +243,26 @@ if game.PlaceId == 8657806289 then
     })
 
     GunModTab:CreateButton({
-        Name = "Just InfAmmo",
+        Name = "InfAmmo",
         Callback = function()
-            if lastWpn then
-                char = player.Character or player.CharacterAdded:Wait()
-                if char:FindFirstChild(lastWpn) then
-                    local gun = char[lastWpn]
-                    gun:GetAttributeChangedSignal("Ammo"):Connect(function()
-                        print("Ammo for " .. lastWpn .. " has changed!")
-                        gun:SetAttribute("Ammo", 999)
-                    end)
-                    Rayfield:Notify({
-                        Title = "InfAmmo Enabled",
-                        Content = "Infinite Ammo for " .. lastWpn,
-                        Duration = 3,
-                    })
-                else
-                    warn("Weapon not found: " .. lastWpn)
-                    Rayfield:Notify({
-                        Title = "Error",
-                        Content = "Weapon not found: " .. lastWpn,
-                        Duration = 3,
-                    })
-                end
+            local player = game.Players.LocalPlayer
+            local char = player.Character or player.CharacterAdded:Wait()
+            if lastWpn and char:FindFirstChild(lastWpn) then
+                local gun = char[lastWpn]
+                gun:GetAttributeChangedSignal("Ammo"):Connect(function()
+                    print("Ammo for " .. lastWpn .. " has changed!")
+                    gun:SetAttribute("Ammo", 999)
+                end)
+                Rayfield:Notify({
+                    Title = "InfAmmo Enabled",
+                    Content = "Infinite Ammo for " .. lastWpn,
+                    Duration = 3,
+                })
             else
-                warn("No weapon detected.")
+                warn("No weapon detected or weapon not found: " .. tostring(lastWpn))
                 Rayfield:Notify({
                     Title = "Error",
-                    Content = "No weapon detected.",
+                    Content = "No weapon detected or weapon not found.",
                     Duration = 3,
                 })
             end
@@ -305,6 +281,24 @@ if game.PlaceId == 8657806289 then
     for _, enemy in ipairs(enemyFolder:GetChildren()) do
         enemyNamesSet[enemy.Name] = true
     end
+
+    -- Add a color picker for the ESP color.
+    _G.ESPColor = Color3.fromRGB(0, 255, 255)
+    local ColorPicker = ESP_Tab:CreateColorPicker({
+        Name = "ESP Color Picker",
+        Color = _G.ESPColor,
+        Flag = "ESPColorPicker",
+        Callback = function(Value)
+            _G.ESPColor = Value
+            -- Update existing highlight ESP objects
+            for enemy, highlights in pairs(highlightESPObjects) do
+                for _, hl in ipairs(highlights) do
+                    hl.FillColor = Value
+                    hl.OutlineColor = Value
+                end
+            end
+        end,
+    })
 
     ------------------------------------------------
     -- Big Heads Script Code (Without Extra Code) --
@@ -397,7 +391,7 @@ if game.PlaceId == 8657806289 then
 
         local textObj = Drawing.new("Text")
         textObj.Text = enemy.Name
-        textObj.Color = Color3.fromRGB(0, 255, 255)  -- cyan
+        textObj.Color = _G.ESPColor
         textObj.Size = 16
         textObj.Outline = true
         textObj.OutlineColor = Color3.new(0, 0, 0)
@@ -469,7 +463,7 @@ if game.PlaceId == 8657806289 then
 
     -------------------------------------
     -- ESP Tab: Highlight ESP (Built-In)
-    -- (Modified to exclude the enemy head from the highlight)
+    -- (Modified to only highlight body parts, hands, and legs – excluding any part named "Head")
     -------------------------------------
     _G.HighlightESPEnabled = false
     local highlightESPObjects = {}
@@ -477,22 +471,19 @@ if game.PlaceId == 8657806289 then
     local function createHighlightESP(enemy)
         if not enemy:IsA("Model") then return end
         if highlightESPObjects[enemy] then return end
-        local highlight = Instance.new("Highlight")
-        highlight.Name = "ESP_Highlight"
-        highlight.FillColor = Color3.fromRGB(0, 255, 255)  -- cyan
-        highlight.OutlineColor = Color3.fromRGB(0, 255, 255)  -- cyan
-        highlight.FillTransparency = 0.5
-        highlight.OutlineTransparency = 0
-        highlight.Parent = enemy
-
-        local data = {highlight = highlight, originalHeadTransparency = nil}
-        local head = enemy:FindFirstChild("Head")
-        if head and head:IsA("BasePart") then
-            data.originalHeadTransparency = head.LocalTransparencyModifier
-            head.LocalTransparencyModifier = 1  -- Exclude head from highlight
+        highlightESPObjects[enemy] = {}  -- table to store highlight instances per part
+        for _, part in ipairs(enemy:GetDescendants()) do
+            if part:IsA("BasePart") and part.Name ~= "Head" then
+                local hl = Instance.new("Highlight")
+                hl.Adornee = part
+                hl.FillColor = _G.ESPColor
+                hl.OutlineColor = _G.ESPColor
+                hl.FillTransparency = 0.5
+                hl.OutlineTransparency = 0
+                hl.Parent = enemy
+                table.insert(highlightESPObjects[enemy], hl)
+            end
         end
-
-        highlightESPObjects[enemy] = data
     end
 
     local function enableHighlightESP()
@@ -510,13 +501,9 @@ if game.PlaceId == 8657806289 then
     end
 
     local function disableHighlightESP()
-        for enemy, data in pairs(highlightESPObjects) do
-            if data.highlight then
-                data.highlight:Destroy()
-            end
-            local head = enemy:FindFirstChild("Head")
-            if head and data.originalHeadTransparency then
-                head.LocalTransparencyModifier = data.originalHeadTransparency
+        for enemy, hlTable in pairs(highlightESPObjects) do
+            for _, hl in ipairs(hlTable) do
+                if hl then hl:Destroy() end
             end
         end
         highlightESPObjects = {}
