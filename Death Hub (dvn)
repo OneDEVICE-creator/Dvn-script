@@ -291,10 +291,17 @@ if game.PlaceId == 8657806289 then
         Callback = function(Value)
             _G.ESPColor = Value
             -- Update existing highlight ESP objects
-            for enemy, highlights in pairs(highlightESPObjects) do
-                for _, hl in ipairs(highlights) do
+            for enemy, hlTable in pairs(highlightESPObjects) do
+                for _, hl in ipairs(hlTable) do
                     hl.FillColor = Value
                     hl.OutlineColor = Value
+                end
+            end
+            -- Update Billboard ESP text color if needed
+            for enemy, billboard in pairs(billboardESPObjects) do
+                local textLabel = billboard:FindFirstChildOfClass("TextLabel")
+                if textLabel then
+                    textLabel.TextColor3 = Value
                 end
             end
         end,
@@ -375,113 +382,89 @@ if game.PlaceId == 8657806289 then
         end)
     end
 
-    -------------------------------------
-    -- ESP Tab: Text ESP (Drawing-Based) --
-    -------------------------------------
-    _G.TextESPEnabled = false
-    local textESPObjects = {}
-    local RunService = game:GetService("RunService")
-    local textESPConnection
+    ------------------------------------------------
+    -- Billboard ESP (Text ESP) Using BillboardGui --
+    ------------------------------------------------
+    local billboardESPObjects = {}
 
-    local function createTextESP(enemy)
+    local function createBillboardESP(enemy)
         if not enemy:IsA("Model") then return end
         local head = enemy:FindFirstChild("Head")
         if not head then return end
-        if textESPObjects[enemy] then return end
+        if enemy:FindFirstChild("ESPBillboard") then return end
 
-        local textObj = Drawing.new("Text")
-        textObj.Text = enemy.Name
-        textObj.Color = _G.ESPColor
-        textObj.Size = 16
-        textObj.Outline = true
-        textObj.OutlineColor = Color3.new(0, 0, 0)
-        textObj.Center = true
-        textObj.Visible = false
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "ESPBillboard"
+        billboard.Adornee = head
+        billboard.Size = UDim2.new(0, 100, 0, 50)
+        billboard.AlwaysOnTop = true
+        billboard.StudsOffset = Vector3.new(0, 2, 0)
+        billboard.Parent = enemy
 
-        textESPObjects[enemy] = {drawing = textObj, head = head}
+        local textLabel = Instance.new("TextLabel", billboard)
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.TextColor3 = _G.ESPColor
+        textLabel.TextStrokeTransparency = 0.5
+        textLabel.TextScaled = false  -- Fixed size
+        textLabel.TextSize = 12       -- Fixed text size
+        textLabel.Text = enemy.Name
+
+        billboardESPObjects[enemy] = billboard
     end
 
-    local function updateTextESP()
-        local camera = workspace.CurrentCamera
-        for enemy, data in pairs(textESPObjects) do
-            if enemy and enemy.Parent then
-                local head = enemy:FindFirstChild("Head")
-                if head then
-                    local pos, onScreen = camera:WorldToViewportPoint(head.Position)
-                    data.drawing.Position = Vector2.new(pos.X, pos.Y - 30)
-                    data.drawing.Visible = onScreen
-                    data.drawing.Text = enemy.Name
-                else
-                    data.drawing.Visible = false
-                end
-            else
-                if data.drawing then
-                    data.drawing:Remove()
-                end
-                textESPObjects[enemy] = nil
-            end
-        end
-    end
-
-    local function startTextESPUpdateLoop()
-        textESPConnection = RunService.RenderStepped:Connect(function()
-            updateTextESP()
-        end)
-    end
-
-    local function stopTextESPUpdateLoop()
-        if textESPConnection then
-            textESPConnection:Disconnect()
-            textESPConnection = nil
-        end
-    end
-
-    local function enableTextESP()
+    local function enableBillboardESP()
         for _, obj in ipairs(workspace:GetChildren()) do
             if obj:IsA("Model") and enemyNamesSet[obj.Name] then
-                createTextESP(obj)
+                createBillboardESP(obj)
             end
         end
-        workspace.ChildAdded:Connect(function(child)
-            if _G.TextESPEnabled and child:IsA("Model") and enemyNamesSet[child.Name] then
-                task.wait(0.1)
-                createTextESP(child)
-            end
-        end)
-        startTextESPUpdateLoop()
     end
 
-    local function disableTextESP()
-        stopTextESPUpdateLoop()
-        for enemy, data in pairs(textESPObjects) do
-            if data.drawing then
-                data.drawing:Remove()
+    local function disableBillboardESP()
+        for enemy, billboard in pairs(billboardESPObjects) do
+            if billboard then
+                billboard:Destroy()
             end
         end
-        textESPObjects = {}
+        billboardESPObjects = {}
     end
 
-    -------------------------------------
-    -- ESP Tab: Highlight ESP (Built-In)
-    -- (Modified to only highlight body parts, hands, and legs – excluding any part named "Head")
-    -------------------------------------
+    ------------------------------------------------
+    -- Highlight ESP (Built-In)
+    -- (Modified to only highlight the enemy's torso)
+    ------------------------------------------------
     _G.HighlightESPEnabled = false
     local highlightESPObjects = {}
+    local RunService = game:GetService("RunService")
+    local highlightUpdaterConnection
 
     local function createHighlightESP(enemy)
         if not enemy:IsA("Model") then return end
         if highlightESPObjects[enemy] then return end
-        highlightESPObjects[enemy] = {}  -- table to store highlight instances per part
-        for _, part in ipairs(enemy:GetDescendants()) do
-            if part:IsA("BasePart") and part.Name ~= "Head" then
+
+        -- Try to find a torso: check for "Torso", then "UpperTorso", then "LowerTorso"
+        local torso = enemy:FindFirstChild("Torso") or enemy:FindFirstChild("UpperTorso") or enemy:FindFirstChild("LowerTorso")
+        if torso then
+            local hl = Instance.new("Highlight")
+            hl.Adornee = torso
+            hl.FillColor = _G.ESPColor
+            hl.OutlineColor = _G.ESPColor
+            hl.FillTransparency = 0.5
+            hl.OutlineTransparency = 0
+            hl.Parent = enemy
+            highlightESPObjects[enemy] = {hl}
+        else
+            -- Fallback: if no torso found, use PrimaryPart if available
+            if enemy.PrimaryPart then
                 local hl = Instance.new("Highlight")
-                hl.Adornee = part
+                hl.Adornee = enemy.PrimaryPart
                 hl.FillColor = _G.ESPColor
                 hl.OutlineColor = _G.ESPColor
                 hl.FillTransparency = 0.5
                 hl.OutlineTransparency = 0
                 hl.Parent = enemy
-                table.insert(highlightESPObjects[enemy], hl)
+                highlightESPObjects[enemy] = {hl}
             end
         end
     end
@@ -498,6 +481,19 @@ if game.PlaceId == 8657806289 then
                 createHighlightESP(child)
             end
         end)
+        -- Start the real-time updater for highlight colors
+        if not highlightUpdaterConnection then
+            highlightUpdaterConnection = RunService.RenderStepped:Connect(function()
+                for enemy, hlTable in pairs(highlightESPObjects) do
+                    for _, hl in ipairs(hlTable) do
+                        if hl then
+                            hl.FillColor = _G.ESPColor
+                            hl.OutlineColor = _G.ESPColor
+                        end
+                    end
+                end
+            end)
+        end
     end
 
     local function disableHighlightESP()
@@ -507,6 +503,10 @@ if game.PlaceId == 8657806289 then
             end
         end
         highlightESPObjects = {}
+        if highlightUpdaterConnection then
+            highlightUpdaterConnection:Disconnect()
+            highlightUpdaterConnection = nil
+        end
     end
 
     ESP_Tab:CreateToggle({
@@ -515,14 +515,14 @@ if game.PlaceId == 8657806289 then
         Callback = function(Value)
             _G.TextESPEnabled = Value
             if Value then
-                enableTextESP()
+                enableBillboardESP()
                 Rayfield:Notify({
                     Title = "Text ESP",
                     Content = "Text ESP Enabled!",
                     Duration = 3,
                 })
             else
-                disableTextESP()
+                disableBillboardESP()
                 Rayfield:Notify({
                     Title = "Text ESP",
                     Content = "Text ESP Disabled!",
