@@ -95,7 +95,7 @@ if game.PlaceId == 8657806289 then
     local GunModTab = Window:CreateTab("Gun Mod")
     GunModTab:CreateSection("Gun Mod Options")
 
-    -- Allowed guns (including new weapons)
+    -- Allowed guns list (including new weapons)
     local allowedGuns = {
         "Akimbo", "Voltaic Impact", "Gunslingers", "Burst Rifle", "Stonewall",
         "Steelforge", "DMR", "Gift of Fire", "Armour Peeler", "Medical Bow",
@@ -136,8 +136,7 @@ if game.PlaceId == 8657806289 then
         end
     end)
 
-    -- Remove Ammo slider entirely.
-    -- Instead, we use input fields for the remaining attributes:
+    -- Use input fields for the gun attributes (Ammo is auto-handled via InfAmmo)
     local firerateValue = 500
     local bulletSpeedValue = 9999
     local spreadValue = 0
@@ -193,7 +192,6 @@ if game.PlaceId == 8657806289 then
                 local gun = char[lastWpn]
                 gun:GetAttributeChangedSignal("Ammo"):Connect(function()
                     print("Ammo for " .. lastWpn .. " has changed!")
-                    -- Automatically set Ammo to 999 if it changes
                     gun:SetAttribute("Ammo", 999)
                 end)
                 gun:SetAttribute("Firerate", firerateValue)
@@ -222,7 +220,6 @@ if game.PlaceId == 8657806289 then
             local char = player.Character or player.CharacterAdded:Wait()
             if lastWpn and char:FindFirstChild(lastWpn) then
                 local gun = char[lastWpn]
-                -- Modify all except Ammo
                 gun:SetAttribute("Firerate", firerateValue)
                 gun:SetAttribute("BulletSpeed", bulletSpeedValue)
                 gun:SetAttribute("Spread", spreadValue)
@@ -290,14 +287,12 @@ if game.PlaceId == 8657806289 then
         Flag = "ESPColorPicker",
         Callback = function(Value)
             _G.ESPColor = Value
-            -- Update existing highlight ESP objects
             for enemy, hlTable in pairs(highlightESPObjects) do
                 for _, hl in ipairs(hlTable) do
                     hl.FillColor = Value
                     hl.OutlineColor = Value
                 end
             end
-            -- Update Billboard ESP text color if needed
             for enemy, billboard in pairs(billboardESPObjects) do
                 local textLabel = billboard:FindFirstChildOfClass("TextLabel")
                 if textLabel then
@@ -314,10 +309,8 @@ if game.PlaceId == 8657806289 then
         if not game:IsLoaded() then
             game.Loaded:Wait()
         end
-
         _G.ScriptEnabled = _G.ScriptEnabled or true
         local hookedParts = {}
-
         local function enforceTransparency(part)
             if hookedParts[part] then return end
             hookedParts[part] = true
@@ -327,7 +320,6 @@ if game.PlaceId == 8657806289 then
                 end
             end)
         end
-
         local function updatePart(part, instance)
             if not part then return end
             if _G.ScriptEnabled then
@@ -349,7 +341,6 @@ if game.PlaceId == 8657806289 then
                 part.Transparency = 0
             end
         end
-
         local function processEnemy(instance)
             if instance.Name == "APU" or not enemyNamesSet[instance.Name] then return end
             local part = instance:FindFirstChild("Head")
@@ -357,17 +348,14 @@ if game.PlaceId == 8657806289 then
                 updatePart(part, instance)
             end
         end
-
         for _, obj in ipairs(workspace:GetChildren()) do
             processEnemy(obj)
             task.wait(0.01)
         end
-
         workspace.ChildAdded:Connect(function(child)
             task.wait(0.05)
             processEnemy(child)
         end)
-
         task.spawn(function()
             while true do
                 if _G.ScriptEnabled then
@@ -386,21 +374,18 @@ if game.PlaceId == 8657806289 then
     -- Billboard ESP (Text ESP) Using BillboardGui --
     ------------------------------------------------
     local billboardESPObjects = {}
-
     local function createBillboardESP(enemy)
         if not enemy:IsA("Model") then return end
         local head = enemy:FindFirstChild("Head")
         if not head then return end
         if enemy:FindFirstChild("ESPBillboard") then return end
-
         local billboard = Instance.new("BillboardGui")
         billboard.Name = "ESPBillboard"
         billboard.Adornee = head
         billboard.Size = UDim2.new(0, 100, 0, 50)
         billboard.AlwaysOnTop = true
-        billboard.StudsOffset = Vector3.new(0, 2, 0)
+        billboard.StudsOffset = Vector3.new(0, 4, 0)
         billboard.Parent = enemy
-
         local textLabel = Instance.new("TextLabel", billboard)
         textLabel.Size = UDim2.new(1, 0, 1, 0)
         textLabel.BackgroundTransparency = 1
@@ -409,18 +394,21 @@ if game.PlaceId == 8657806289 then
         textLabel.TextScaled = false  -- Fixed size
         textLabel.TextSize = 12       -- Fixed text size
         textLabel.Text = enemy.Name
-
         billboardESPObjects[enemy] = billboard
     end
-
     local function enableBillboardESP()
         for _, obj in ipairs(workspace:GetChildren()) do
             if obj:IsA("Model") and enemyNamesSet[obj.Name] then
                 createBillboardESP(obj)
             end
         end
+        workspace.ChildAdded:Connect(function(child)
+            if _G.TextESPEnabled and child:IsA("Model") and enemyNamesSet[child.Name] then
+                task.wait(0.1)
+                createBillboardESP(child)
+            end
+        end)
     end
-
     local function disableBillboardESP()
         for enemy, billboard in pairs(billboardESPObjects) do
             if billboard then
@@ -432,43 +420,39 @@ if game.PlaceId == 8657806289 then
 
     ------------------------------------------------
     -- Highlight ESP (Built-In)
-    -- (Modified to only highlight the enemy's torso)
+    -- (Modified to only highlight the enemy's torso, hands, and legs)
     ------------------------------------------------
     _G.HighlightESPEnabled = false
     local highlightESPObjects = {}
     local RunService = game:GetService("RunService")
     local highlightUpdaterConnection
-
     local function createHighlightESP(enemy)
         if not enemy:IsA("Model") then return end
         if highlightESPObjects[enemy] then return end
-
-        -- Try to find a torso: check for "Torso", then "UpperTorso", then "LowerTorso"
+        local partsToHighlight = {}
         local torso = enemy:FindFirstChild("Torso") or enemy:FindFirstChild("UpperTorso") or enemy:FindFirstChild("LowerTorso")
-        if torso then
+        if torso then table.insert(partsToHighlight, torso) end
+        if enemy:FindFirstChild("LeftHand") then table.insert(partsToHighlight, enemy.LeftHand) end
+        if enemy:FindFirstChild("RightHand") then table.insert(partsToHighlight, enemy.RightHand) end
+        if enemy:FindFirstChild("LeftLeg") then table.insert(partsToHighlight, enemy.LeftLeg) end
+        if enemy:FindFirstChild("RightLeg") then table.insert(partsToHighlight, enemy.RightLeg) end
+        if #partsToHighlight == 0 and enemy.PrimaryPart then
+            table.insert(partsToHighlight, enemy.PrimaryPart)
+        end
+        if #partsToHighlight == 0 then return end
+        local hlTable = {}
+        for _, part in ipairs(partsToHighlight) do
             local hl = Instance.new("Highlight")
-            hl.Adornee = torso
+            hl.Adornee = part
             hl.FillColor = _G.ESPColor
             hl.OutlineColor = _G.ESPColor
             hl.FillTransparency = 0.5
             hl.OutlineTransparency = 0
             hl.Parent = enemy
-            highlightESPObjects[enemy] = {hl}
-        else
-            -- Fallback: if no torso found, use PrimaryPart if available
-            if enemy.PrimaryPart then
-                local hl = Instance.new("Highlight")
-                hl.Adornee = enemy.PrimaryPart
-                hl.FillColor = _G.ESPColor
-                hl.OutlineColor = _G.ESPColor
-                hl.FillTransparency = 0.5
-                hl.OutlineTransparency = 0
-                hl.Parent = enemy
-                highlightESPObjects[enemy] = {hl}
-            end
+            table.insert(hlTable, hl)
         end
+        highlightESPObjects[enemy] = hlTable
     end
-
     local function enableHighlightESP()
         for _, obj in ipairs(workspace:GetChildren()) do
             if obj:IsA("Model") and enemyNamesSet[obj.Name] then
@@ -481,7 +465,6 @@ if game.PlaceId == 8657806289 then
                 createHighlightESP(child)
             end
         end)
-        -- Start the real-time updater for highlight colors
         if not highlightUpdaterConnection then
             highlightUpdaterConnection = RunService.RenderStepped:Connect(function()
                 for enemy, hlTable in pairs(highlightESPObjects) do
@@ -495,7 +478,6 @@ if game.PlaceId == 8657806289 then
             end)
         end
     end
-
     local function disableHighlightESP()
         for enemy, hlTable in pairs(highlightESPObjects) do
             for _, hl in ipairs(hlTable) do
