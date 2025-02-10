@@ -71,7 +71,6 @@ if game.PlaceId == 8657806289 then
                     Duration = 3,
                 })
             else
-                -- Reset enemy head properties when disabled
                 for _, v in ipairs(workspace:GetChildren()) do
                     if v:IsA("Model") and not v:FindFirstChildOfClass("Humanoid") then
                         local head = v:FindFirstChild("Head")
@@ -137,21 +136,11 @@ if game.PlaceId == 8657806289 then
         end
     end)
 
-    -- Default slider values for gun attributes
-    local ammoValue = 0
+    -- Remove Ammo slider entirely.
+    -- Default values for other gun attributes:
     local firerateValue = 500
     local bulletSpeedValue = 9999
     local spreadValue = 0
-
-    GunModTab:CreateSlider({
-        Name = "Ammo",
-        Range = {0, 999},
-        Increment = 1,
-        CurrentValue = ammoValue,
-        Callback = function(Value)
-            ammoValue = Value
-        end,
-    })
 
     GunModTab:CreateSlider({
         Name = "Firerate",
@@ -165,7 +154,7 @@ if game.PlaceId == 8657806289 then
 
     GunModTab:CreateSlider({
         Name = "Bullet Speed",
-        Range = {0, 9999},
+        Range = {10, 9999},
         Increment = 1,
         CurrentValue = bulletSpeedValue,
         Callback = function(Value)
@@ -190,7 +179,10 @@ if game.PlaceId == 8657806289 then
                 char = player.Character or player.CharacterAdded:Wait()
                 if char:FindFirstChild(lastWpn) then
                     local gun = char[lastWpn]
-                    gun:SetAttribute("Ammo", ammoValue)
+                    gun:GetAttributeChangedSignal("Ammo"):Connect(function()
+                    print("Ammo for " .. lastWpn .. " has changed!")
+                    -- Automatically set Ammo to 999 if it changes
+                    gun:SetAttribute("Ammo", 999)
                     gun:SetAttribute("Firerate", firerateValue)
                     gun:SetAttribute("BulletSpeed", bulletSpeedValue)
                     gun:SetAttribute("Spread", spreadValue)
@@ -261,6 +253,8 @@ if game.PlaceId == 8657806289 then
                 if char:FindFirstChild(lastWpn) then
                     local gun = char[lastWpn]
                     gun:GetAttributeChangedSignal("Ammo"):Connect(function()
+                        print("Ammo for " .. lastWpn .. " has changed!")
+                        -- Automatically set Ammo to 999 if it changes
                         gun:SetAttribute("Ammo", 999)
                     end)
                     Rayfield:Notify({
@@ -483,7 +477,7 @@ if game.PlaceId == 8657806289 then
         local head = enemy:FindFirstChild("Head")
         if head and head:IsA("BasePart") then
             data.originalHeadTransparency = head.LocalTransparencyModifier
-            head.LocalTransparencyModifier = 1  -- Make the head fully transparent for the highlight
+            head.LocalTransparencyModifier = 1  -- Exclude head from highlight
         end
 
         highlightESPObjects[enemy] = data
