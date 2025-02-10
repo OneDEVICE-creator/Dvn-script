@@ -137,38 +137,50 @@ if game.PlaceId == 8657806289 then
     end)
 
     -- Remove Ammo slider entirely.
-    -- Default values for other gun attributes:
+    -- Instead, we use input fields for the remaining attributes:
     local firerateValue = 500
     local bulletSpeedValue = 9999
     local spreadValue = 0
 
-    GunModTab:CreateSlider({
-        Name = "Firerate",
-        Range = {1, 99999},
-        Increment = 1,
-        CurrentValue = firerateValue,
-        Callback = function(Value)
-            firerateValue = Value
+    GunModTab:CreateInput({
+        Name = "Firerate (any)",
+        CurrentValue = tostring(firerateValue),
+        PlaceholderText = "Enter Firerate",
+        RemoveTextAfterFocusLost = false,
+        Flag = "FirerateInput",
+        Callback = function(Text)
+            local num = tonumber(Text)
+            if num then
+                firerateValue = num
+            end
         end,
     })
 
-    GunModTab:CreateSlider({
-        Name = "Bullet Speed",
-        Range = {10, 9999},
-        Increment = 1,
-        CurrentValue = bulletSpeedValue,
-        Callback = function(Value)
-            bulletSpeedValue = Value
+    GunModTab:CreateInput({
+        Name = "Bullet Speed (req 9999)",
+        CurrentValue = tostring(bulletSpeedValue),
+        PlaceholderText = "Enter Bullet Speed",
+        RemoveTextAfterFocusLost = false,
+        Flag = "BulletSpeedInput",
+        Callback = function(Text)
+            local num = tonumber(Text)
+            if num then
+                bulletSpeedValue = num
+            end
         end,
     })
 
-    GunModTab:CreateSlider({
-        Name = "Spread",
-        Range = {0, 5},
-        Increment = 1,
-        CurrentValue = spreadValue,
-        Callback = function(Value)
-            spreadValue = Value
+    GunModTab:CreateInput({
+        Name = "Spread (req 0-1)",
+        CurrentValue = tostring(spreadValue),
+        PlaceholderText = "Enter Spread",
+        RemoveTextAfterFocusLost = false,
+        Flag = "SpreadInput",
+        Callback = function(Text)
+            local num = tonumber(Text)
+            if num then
+                spreadValue = num
+            end
         end,
     })
 
@@ -180,9 +192,10 @@ if game.PlaceId == 8657806289 then
                 if char:FindFirstChild(lastWpn) then
                     local gun = char[lastWpn]
                     gun:GetAttributeChangedSignal("Ammo"):Connect(function()
-                    print("Ammo for " .. lastWpn .. " has changed!")
-                    -- Automatically set Ammo to 999 if it changes
-                    gun:SetAttribute("Ammo", 999)
+                        print("Ammo for " .. lastWpn .. " has changed!")
+                        -- Automatically set Ammo to 999 if it changes
+                        gun:SetAttribute("Ammo", 999)
+                    end)
                     gun:SetAttribute("Firerate", firerateValue)
                     gun:SetAttribute("BulletSpeed", bulletSpeedValue)
                     gun:SetAttribute("Spread", spreadValue)
@@ -246,7 +259,7 @@ if game.PlaceId == 8657806289 then
     })
 
     GunModTab:CreateButton({
-        Name = "InfAmmo",
+        Name = "Just InfAmmo",
         Callback = function()
             if lastWpn then
                 char = player.Character or player.CharacterAdded:Wait()
@@ -254,7 +267,6 @@ if game.PlaceId == 8657806289 then
                     local gun = char[lastWpn]
                     gun:GetAttributeChangedSignal("Ammo"):Connect(function()
                         print("Ammo for " .. lastWpn .. " has changed!")
-                        -- Automatically set Ammo to 999 if it changes
                         gun:SetAttribute("Ammo", 999)
                     end)
                     Rayfield:Notify({
