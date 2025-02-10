@@ -1,7 +1,8 @@
 if game.PlaceId == 8657806289 then
-
+    ------------------------------------------------------
+    -- Rayfield UI Initialization & Window Configuration --
+    ------------------------------------------------------
     local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-    
     local Window = Rayfield:CreateWindow({
         Name = "Death Hub 😼",
         Theme = "Ocean",
@@ -10,26 +11,14 @@ if game.PlaceId == 8657806289 then
             FileName = "Death Hub"
         }
     })
-    
+
+    -----------------------------
+    -- Main Tab: Enemy Settings --
+    -----------------------------
     local MainTab = Window:CreateTab("Main")
-    local MainSection = MainTab:CreateSection("Dvn-Script")
-    
-    Rayfield:Notify({
-        Title = "Script Executed",
-        Content = "The script has been executed successfully!",
-        Duration = 6.5,
-    })
-    
-    -- Gun Mod Button
-    local MainButton = MainTab:CreateButton({
-        Name = "Gun Mod Gui",
-        Callback = function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/OneDEVICE-creator/Dvn-script/main/Gun%20mod"))()
-        end,
-    })
-    
-    -- Sliders for Head Size and Transparency
-    local MainSlider1 = MainTab:CreateSlider({
+    MainTab:CreateSection("Enemy Settings")
+
+    MainTab:CreateSlider({
         Name = "Enemy Head Size",
         Range = {1, 30},
         Increment = 0.5,
@@ -38,7 +27,8 @@ if game.PlaceId == 8657806289 then
             _G.EnemiesHeadSize = Value
         end,
     })
-    local MainSlider1 = MainTab:CreateSlider({
+
+    MainTab:CreateSlider({
         Name = "Prometheus Head Size",
         Range = {1, 10},
         Increment = 0.5,
@@ -47,8 +37,8 @@ if game.PlaceId == 8657806289 then
             _G.PrometheusHeadSize = Value
         end,
     })
-    
-    local MainSlider2 = MainTab:CreateSlider({
+
+    MainTab:CreateSlider({
         Name = "Sniper Head Size",
         Range = {1, 10},
         Increment = 0.5,
@@ -57,8 +47,8 @@ if game.PlaceId == 8657806289 then
             _G.SniperHeadSize = Value
         end,
     })
-    
-    local MainSlider3 = MainTab:CreateSlider({
+
+    MainTab:CreateSlider({
         Name = "Transparency",
         Range = {0, 1},
         Increment = 0.1,
@@ -67,33 +57,30 @@ if game.PlaceId == 8657806289 then
             _G.Transparency = Value
         end,
     })
-    
-    -- Toggle for Big Head Script
-    local Toggle = MainTab:CreateToggle({
+
+    MainTab:CreateToggle({
         Name = "Enable Big Heads",
         CurrentValue = false,
         Callback = function(Value)
             _G.ScriptEnabled = Value
-            
             if Value then
-                -- Load the Big Head script
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/OneDEVICE-creator/Dvn-script/main/Bighead%20for%20enemy"))()
-                
+                loadBigHeads()
                 Rayfield:Notify({
                     Title = "Big Heads",
                     Content = "Big Heads Enabled!",
                     Duration = 3,
                 })
             else
-                -- Reset enemy heads
+                -- Reset enemy head properties when disabled
                 for _, v in ipairs(workspace:GetChildren()) do
-                    if v:IsA("Model") and v:FindFirstChild("Head") and not v:FindFirstChildOfClass("Humanoid") then
-                        local head = v.Head
-                        head.Size = Vector3.new(1, 1, 1)
-                        head.Transparency = 0
+                    if v:IsA("Model") and not v:FindFirstChildOfClass("Humanoid") then
+                        local head = v:FindFirstChild("Head")
+                        if head then
+                            head.Size = Vector3.new(1, 1, 1)
+                            head.Transparency = 0
+                        end
                     end
                 end
-
                 Rayfield:Notify({
                     Title = "Big Heads",
                     Content = "Big Heads Disabled!",
@@ -102,5 +89,476 @@ if game.PlaceId == 8657806289 then
             end
         end,
     })
-    
+
+    -----------------------------
+    -- Gun Mod Tab: Gun Modification Options --
+    -----------------------------
+    local GunModTab = Window:CreateTab("Gun Mod")
+    GunModTab:CreateSection("Gun Mod Options")
+
+    -- Allowed guns (including new weapons)
+    local allowedGuns = {
+        "Akimbo", "Voltaic Impact", "Gunslingers", "Burst Rifle", "Stonewall",
+        "Steelforge", "DMR", "Gift of Fire", "Armour Peeler", "Medical Bow",
+        "Recurve", "Vitabow", "Rifle", "Bolter", "Harpoon Gun", "RPG",
+        "Rocket Stormer", "Shockwave Device", "Shotgun", "Hallsweeper",
+        "Sprinter's Streak", "SMG", "Loose Trigger", "Twinface", "Mastermind's Rifle",
+        "Shovel", "Overcharger", "Rallying Cry", "Machete", "Handaxes", "Torqueblade"
+    }
+
+    getgenv().AutoDetectWeapon = true
+    local player = game.Players.LocalPlayer
+    local char = player.Character or player.CharacterAdded:Wait()
+    local lastWpn = nil
+
+    local function getWpn()
+        for _, itm in pairs(char:GetChildren()) do
+            if itm:IsA("Tool") and table.find(allowedGuns, itm.Name) then
+                return itm.Name
+            end
+        end
+        return nil
+    end
+
+    task.spawn(function()
+        while getgenv().AutoDetectWeapon do
+            char = player.Character or player.CharacterAdded:Wait()
+            local newWpn = getWpn()
+            if newWpn ~= lastWpn then
+                lastWpn = newWpn
+                print("Auto-detected weapon: " .. (lastWpn or "nil"))
+                Rayfield:Notify({
+                    Title = "Weapon Detected",
+                    Content = "Current weapon: " .. (lastWpn or "None"),
+                    Duration = 2,
+                })
+            end
+            task.wait(1)
+        end
+    end)
+
+    -- Default slider values for gun attributes
+    local ammoValue = 0
+    local firerateValue = 500
+    local bulletSpeedValue = 9999
+    local spreadValue = 0
+
+    GunModTab:CreateSlider({
+        Name = "Ammo",
+        Range = {0, 999},
+        Increment = 1,
+        CurrentValue = ammoValue,
+        Callback = function(Value)
+            ammoValue = Value
+        end,
+    })
+
+    GunModTab:CreateSlider({
+        Name = "Firerate",
+        Range = {1, 99999},
+        Increment = 1,
+        CurrentValue = firerateValue,
+        Callback = function(Value)
+            firerateValue = Value
+        end,
+    })
+
+    GunModTab:CreateSlider({
+        Name = "Bullet Speed",
+        Range = {0, 9999},
+        Increment = 1,
+        CurrentValue = bulletSpeedValue,
+        Callback = function(Value)
+            bulletSpeedValue = Value
+        end,
+    })
+
+    GunModTab:CreateSlider({
+        Name = "Spread",
+        Range = {0, 5},
+        Increment = 1,
+        CurrentValue = spreadValue,
+        Callback = function(Value)
+            spreadValue = Value
+        end,
+    })
+
+    GunModTab:CreateButton({
+        Name = "Modify Gun",
+        Callback = function()
+            if lastWpn then
+                char = player.Character or player.CharacterAdded:Wait()
+                if char:FindFirstChild(lastWpn) then
+                    local gun = char[lastWpn]
+                    gun:SetAttribute("Ammo", ammoValue)
+                    gun:SetAttribute("Firerate", firerateValue)
+                    gun:SetAttribute("BulletSpeed", bulletSpeedValue)
+                    gun:SetAttribute("Spread", spreadValue)
+                    Rayfield:Notify({
+                        Title = "Gun Modified",
+                        Content = "Modified " .. lastWpn .. " successfully!",
+                        Duration = 3,
+                    })
+                else
+                    warn("Weapon not found: " .. lastWpn)
+                    Rayfield:Notify({
+                        Title = "Error",
+                        Content = "Weapon not found: " .. lastWpn,
+                        Duration = 3,
+                    })
+                end
+            else
+                warn("No weapon detected.")
+                Rayfield:Notify({
+                    Title = "Error",
+                    Content = "No weapon detected.",
+                    Duration = 3,
+                })
+            end
+        end,
+    })
+
+    GunModTab:CreateButton({
+        Name = "Modify Without Ammo",
+        Callback = function()
+            if lastWpn then
+                char = player.Character or player.CharacterAdded:Wait()
+                if char:FindFirstChild(lastWpn) then
+                    local gun = char[lastWpn]
+                    -- Modify all except Ammo
+                    gun:SetAttribute("Firerate", firerateValue)
+                    gun:SetAttribute("BulletSpeed", bulletSpeedValue)
+                    gun:SetAttribute("Spread", spreadValue)
+                    Rayfield:Notify({
+                        Title = "Gun Modified",
+                        Content = "Modified " .. lastWpn .. " without changing ammo!",
+                        Duration = 3,
+                    })
+                else
+                    warn("Weapon not found: " .. lastWpn)
+                    Rayfield:Notify({
+                        Title = "Error",
+                        Content = "Weapon not found: " .. lastWpn,
+                        Duration = 3,
+                    })
+                end
+            else
+                warn("No weapon detected.")
+                Rayfield:Notify({
+                    Title = "Error",
+                    Content = "No weapon detected.",
+                    Duration = 3,
+                })
+            end
+        end,
+    })
+
+    GunModTab:CreateButton({
+        Name = "InfAmmo",
+        Callback = function()
+            if lastWpn then
+                char = player.Character or player.CharacterAdded:Wait()
+                if char:FindFirstChild(lastWpn) then
+                    local gun = char[lastWpn]
+                    gun:GetAttributeChangedSignal("Ammo"):Connect(function()
+                        gun:SetAttribute("Ammo", 999)
+                    end)
+                    Rayfield:Notify({
+                        Title = "InfAmmo Enabled",
+                        Content = "Infinite Ammo for " .. lastWpn,
+                        Duration = 3,
+                    })
+                else
+                    warn("Weapon not found: " .. lastWpn)
+                    Rayfield:Notify({
+                        Title = "Error",
+                        Content = "Weapon not found: " .. lastWpn,
+                        Duration = 3,
+                    })
+                end
+            else
+                warn("No weapon detected.")
+                Rayfield:Notify({
+                    Title = "Error",
+                    Content = "No weapon detected.",
+                    Duration = 3,
+                })
+            end
+        end,
+    })
+
+    -----------------------------
+    -- ESP Tab: ESP Options --
+    -----------------------------
+    local ESP_Tab = Window:CreateTab("ESP")
+    ESP_Tab:CreateSection("ESP Options")
+
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local enemyFolder = ReplicatedStorage.Units.Noobs
+    local enemyNamesSet = {}
+    for _, enemy in ipairs(enemyFolder:GetChildren()) do
+        enemyNamesSet[enemy.Name] = true
+    end
+
+    ------------------------------------------------
+    -- Big Heads Script Code (Without Extra Code) --
+    ------------------------------------------------
+    function loadBigHeads()
+        if not game:IsLoaded() then
+            game.Loaded:Wait()
+        end
+
+        _G.ScriptEnabled = _G.ScriptEnabled or true
+        local hookedParts = {}
+
+        local function enforceTransparency(part)
+            if hookedParts[part] then return end
+            hookedParts[part] = true
+            part:GetPropertyChangedSignal("Transparency"):Connect(function()
+                if _G.ScriptEnabled then
+                    part.Transparency = _G.Transparency or 0.9
+                end
+            end)
+        end
+
+        local function updatePart(part, instance)
+            if not part then return end
+            if _G.ScriptEnabled then
+                part.Transparency = _G.Transparency or 0.9
+                enforceTransparency(part)
+                if instance.Name == "Jetpacker" then
+                    part.Size = Vector3.new(5, 5, 5)
+                elseif instance.Name == "Sniper" then
+                    part.Size = Vector3.new(_G.SniperHeadSize or 6, _G.SniperHeadSize or 6, _G.SniperHeadSize or 6)
+                elseif instance.Name == "Prometheus" then
+                    part.Size = Vector3.new(_G.PrometheusHeadSize or 2, _G.PrometheusHeadSize or 2, _G.PrometheusHeadSize or 2)
+                else
+                    part.Size = Vector3.new(_G.EnemiesHeadSize or 8, _G.EnemiesHeadSize or 8, _G.EnemiesHeadSize or 8)
+                end
+                part.Massless = true
+                part.CanCollide = false
+            else
+                part.Size = Vector3.new(1, 1, 1)
+                part.Transparency = 0
+            end
+        end
+
+        local function processEnemy(instance)
+            if instance.Name == "APU" or not enemyNamesSet[instance.Name] then return end
+            local part = instance:FindFirstChild("Head")
+            if part then
+                updatePart(part, instance)
+            end
+        end
+
+        for _, obj in ipairs(workspace:GetChildren()) do
+            processEnemy(obj)
+            task.wait(0.01)
+        end
+
+        workspace.ChildAdded:Connect(function(child)
+            task.wait(0.05)
+            processEnemy(child)
+        end)
+
+        task.spawn(function()
+            while true do
+                if _G.ScriptEnabled then
+                    for _, obj in ipairs(workspace:GetChildren()) do
+                        if obj:FindFirstChild("Head") then
+                            processEnemy(obj)
+                        end
+                    end
+                end
+                task.wait(1)
+            end
+        end)
+    end
+
+    -------------------------------------
+    -- ESP Tab: Text ESP (Drawing-Based) --
+    -------------------------------------
+    _G.TextESPEnabled = false
+    local textESPObjects = {}
+    local RunService = game:GetService("RunService")
+    local textESPConnection
+
+    local function createTextESP(enemy)
+        if not enemy:IsA("Model") then return end
+        local head = enemy:FindFirstChild("Head")
+        if not head then return end
+        if textESPObjects[enemy] then return end
+
+        local textObj = Drawing.new("Text")
+        textObj.Text = enemy.Name
+        textObj.Color = Color3.fromRGB(0, 255, 255)  -- cyan
+        textObj.Size = 16
+        textObj.Outline = true
+        textObj.OutlineColor = Color3.new(0, 0, 0)
+        textObj.Center = true
+        textObj.Visible = false
+
+        textESPObjects[enemy] = {drawing = textObj, head = head}
+    end
+
+    local function updateTextESP()
+        local camera = workspace.CurrentCamera
+        for enemy, data in pairs(textESPObjects) do
+            if enemy and enemy.Parent then
+                local head = enemy:FindFirstChild("Head")
+                if head then
+                    local pos, onScreen = camera:WorldToViewportPoint(head.Position)
+                    data.drawing.Position = Vector2.new(pos.X, pos.Y - 30)
+                    data.drawing.Visible = onScreen
+                    data.drawing.Text = enemy.Name
+                else
+                    data.drawing.Visible = false
+                end
+            else
+                if data.drawing then
+                    data.drawing:Remove()
+                end
+                textESPObjects[enemy] = nil
+            end
+        end
+    end
+
+    local function startTextESPUpdateLoop()
+        textESPConnection = RunService.RenderStepped:Connect(function()
+            updateTextESP()
+        end)
+    end
+
+    local function stopTextESPUpdateLoop()
+        if textESPConnection then
+            textESPConnection:Disconnect()
+            textESPConnection = nil
+        end
+    end
+
+    local function enableTextESP()
+        for _, obj in ipairs(workspace:GetChildren()) do
+            if obj:IsA("Model") and enemyNamesSet[obj.Name] then
+                createTextESP(obj)
+            end
+        end
+        workspace.ChildAdded:Connect(function(child)
+            if _G.TextESPEnabled and child:IsA("Model") and enemyNamesSet[child.Name] then
+                task.wait(0.1)
+                createTextESP(child)
+            end
+        end)
+        startTextESPUpdateLoop()
+    end
+
+    local function disableTextESP()
+        stopTextESPUpdateLoop()
+        for enemy, data in pairs(textESPObjects) do
+            if data.drawing then
+                data.drawing:Remove()
+            end
+        end
+        textESPObjects = {}
+    end
+
+    -------------------------------------
+    -- ESP Tab: Highlight ESP (Built-In)
+    -- (Modified to exclude the enemy head from the highlight)
+    -------------------------------------
+    _G.HighlightESPEnabled = false
+    local highlightESPObjects = {}
+
+    local function createHighlightESP(enemy)
+        if not enemy:IsA("Model") then return end
+        if highlightESPObjects[enemy] then return end
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "ESP_Highlight"
+        highlight.FillColor = Color3.fromRGB(0, 255, 255)  -- cyan
+        highlight.OutlineColor = Color3.fromRGB(0, 255, 255)  -- cyan
+        highlight.FillTransparency = 0.5
+        highlight.OutlineTransparency = 0
+        highlight.Parent = enemy
+
+        local data = {highlight = highlight, originalHeadTransparency = nil}
+        local head = enemy:FindFirstChild("Head")
+        if head and head:IsA("BasePart") then
+            data.originalHeadTransparency = head.LocalTransparencyModifier
+            head.LocalTransparencyModifier = 1  -- Make the head fully transparent for the highlight
+        end
+
+        highlightESPObjects[enemy] = data
+    end
+
+    local function enableHighlightESP()
+        for _, obj in ipairs(workspace:GetChildren()) do
+            if obj:IsA("Model") and enemyNamesSet[obj.Name] then
+                createHighlightESP(obj)
+            end
+        end
+        workspace.ChildAdded:Connect(function(child)
+            if _G.HighlightESPEnabled and child:IsA("Model") and enemyNamesSet[child.Name] then
+                task.wait(0.1)
+                createHighlightESP(child)
+            end
+        end)
+    end
+
+    local function disableHighlightESP()
+        for enemy, data in pairs(highlightESPObjects) do
+            if data.highlight then
+                data.highlight:Destroy()
+            end
+            local head = enemy:FindFirstChild("Head")
+            if head and data.originalHeadTransparency then
+                head.LocalTransparencyModifier = data.originalHeadTransparency
+            end
+        end
+        highlightESPObjects = {}
+    end
+
+    ESP_Tab:CreateToggle({
+        Name = "Enable Text ESP",
+        CurrentValue = false,
+        Callback = function(Value)
+            _G.TextESPEnabled = Value
+            if Value then
+                enableTextESP()
+                Rayfield:Notify({
+                    Title = "Text ESP",
+                    Content = "Text ESP Enabled!",
+                    Duration = 3,
+                })
+            else
+                disableTextESP()
+                Rayfield:Notify({
+                    Title = "Text ESP",
+                    Content = "Text ESP Disabled!",
+                    Duration = 3,
+                })
+            end
+        end,
+    })
+
+    ESP_Tab:CreateToggle({
+        Name = "Enable Highlight ESP",
+        CurrentValue = false,
+        Callback = function(Value)
+            _G.HighlightESPEnabled = Value
+            if Value then
+                enableHighlightESP()
+                Rayfield:Notify({
+                    Title = "Highlight ESP",
+                    Content = "Highlight ESP Enabled!",
+                    Duration = 3,
+                })
+            else
+                disableHighlightESP()
+                Rayfield:Notify({
+                    Title = "Highlight ESP",
+                    Content = "Highlight ESP Disabled!",
+                    Duration = 3,
+                })
+            end
+        end,
+    })
 end
