@@ -15,8 +15,8 @@ if game.PlaceId == 8657806289 then
     -----------------------------
     -- Main Tab: Enemy Settings --
     -----------------------------
-    local MainTab = Window:CreateTab("Main")
-    MainTab:CreateSection("Enemy Settings")
+    local MainTab = Window:CreateTab("🏠Main🏠")
+    MainTab:CreateSection("HitBox Settings")
 
     MainTab:CreateSlider({
         Name = "Enemy Head Size",
@@ -58,6 +58,35 @@ if game.PlaceId == 8657806289 then
         end,
     })
 
+
+    -- Toggle for Detonator hitbox enlargement
+    _G.DetonatorHitboxEnlarged = _G.DetonatorHitboxEnlarged or false
+    MainTab:CreateToggle({
+        Name = "Enlarge Detonator Hitbox *Am not sure ts is working :v ",
+        CurrentValue = _G.DetonatorHitboxEnlarged,
+        Callback = function(Value)
+            _G.DetonatorHitboxEnlarged = Value
+            for _, obj in ipairs(workspace:GetChildren()) do
+                if obj.Name == "Detonator" or obj.Name == "BolterDetonator" then
+                    local hitbox = obj:FindFirstChild("Hitbox") or obj:FindFirstChild("HumanoidRootPart")
+                                   or obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+                    if hitbox then
+                        if Value then
+                            if not originalDetonatorSizes[obj] then
+                                originalDetonatorSizes[obj] = hitbox.Size
+                            end
+                            hitbox.Size = originalDetonatorSizes[obj] * 9999999999999999999999999999999999
+                        else
+                            if originalDetonatorSizes[obj] then
+                                hitbox.Size = originalDetonatorSizes[obj]
+                            end
+                        end
+                    end
+                end
+            end
+        end,
+    })
+
     MainTab:CreateToggle({
         Name = "Enable Big Heads",
         CurrentValue = false,
@@ -68,22 +97,29 @@ if game.PlaceId == 8657806289 then
                 Rayfield:Notify({
                     Title = "Big Heads",
                     Content = "Big Heads Enabled!",
-                    Duration = 3,
+                    Duration = 3
                 })
             else
                 for _, v in ipairs(workspace:GetChildren()) do
                     if v:IsA("Model") and not v:FindFirstChildOfClass("Humanoid") then
-                        local head = v:FindFirstChild("Head")
-                        if head then
-                            head.Size = Vector3.new(1, 1, 1)
-                            head.Transparency = 0
+                        if v.Name == "Detonator" or v.Name == "BolterDetonator" then
+                            local hitbox = v:FindFirstChild("Hitbox") or v:FindFirstChild("HumanoidRootPart")
+                            if hitbox and originalDetonatorSizes[v] then
+                                hitbox.Size = originalDetonatorSizes[v]
+                            end
+                        else
+                            local head = v:FindFirstChild("Head")
+                            if head then
+                                head.Size = Vector3.new(1, 1, 1)
+                                head.Transparency = 0
+                            end
                         end
                     end
                 end
                 Rayfield:Notify({
                     Title = "Big Heads",
                     Content = "Big Heads Disabled!",
-                    Duration = 3,
+                    Duration = 3
                 })
             end
         end,
@@ -92,10 +128,19 @@ if game.PlaceId == 8657806289 then
     -----------------------------
     -- Gun Mod Tab: Gun Modification Options --
     -----------------------------
-    local GunModTab = Window:CreateTab("Gun Mod")
+    local GunModTab = Window:CreateTab("Gun Mod 🔫")
     GunModTab:CreateSection("Gun Mod Options")
 
-    -- Allowed guns list (including new weapons)
+    -- Toggle to control auto-detect notifications on/off
+    local showAutoDetectNotif = true
+    GunModTab:CreateToggle({
+        Name = "Show Auto-Detect Notifications",
+        CurrentValue = showAutoDetectNotif,
+        Callback = function(Value)
+            showAutoDetectNotif = Value
+        end,
+    })
+
     local allowedGuns = {
         "Akimbo", "Voltaic Impact", "Gunslingers", "Burst Rifle", "Stonewall",
         "Steelforge", "DMR", "Gift of Fire", "Armour Peeler", "Medical Bow",
@@ -126,17 +171,18 @@ if game.PlaceId == 8657806289 then
             if newWpn ~= lastWpn then
                 lastWpn = newWpn
                 print("Auto-detected weapon: " .. (lastWpn or "nil"))
-                Rayfield:Notify({
-                    Title = "Weapon Detected",
-                    Content = "Current weapon: " .. (lastWpn or "None"),
-                    Duration = 2,
-                })
+                if showAutoDetectNotif then
+                    Rayfield:Notify({
+                        Title = "Weapon Detected",
+                        Content = "Current weapon: " .. (lastWpn or "None"),
+                        Duration = 2
+                    })
+                end
             end
             task.wait(1)
         end
     end)
 
-    -- Use input fields for the gun attributes (Ammo is auto-handled via InfAmmo)
     local firerateValue = 500
     local bulletSpeedValue = 9999
     local spreadValue = 0
@@ -269,7 +315,7 @@ if game.PlaceId == 8657806289 then
     -----------------------------
     -- ESP Tab: ESP Options --
     -----------------------------
-    local ESP_Tab = Window:CreateTab("ESP")
+    local ESP_Tab = Window:CreateTab("ESP 🔮")
     ESP_Tab:CreateSection("ESP Options")
 
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -305,6 +351,7 @@ if game.PlaceId == 8657806289 then
     ------------------------------------------------
     -- Big Heads Script Code (Without Extra Code) --
     ------------------------------------------------
+    local originalDetonatorSizes = {}  -- For storing original sizes for Detonator objects
     function loadBigHeads()
         if not game:IsLoaded() then
             game.Loaded:Wait()
@@ -343,6 +390,16 @@ if game.PlaceId == 8657806289 then
         end
         local function processEnemy(instance)
             if instance.Name == "APU" or not enemyNamesSet[instance.Name] then return end
+            if instance.Name == "BolterDetonator" or instance.Name == "Detonator" then
+                local hitbox = instance:FindFirstChild("Hitbox") or instance:FindFirstChild("HumanoidRootPart") or instance.PrimaryPart or instance:FindFirstChildWhichIsA("BasePart")
+                if hitbox then
+                    if not originalDetonatorSizes[instance] then
+                        originalDetonatorSizes[instance] = hitbox.Size
+                    end
+                    hitbox.Size = originalDetonatorSizes[instance] * (_G.DetonatorHitboxEnlarged and 9999999999999999 or 99999999999999999999999)
+                end
+                return
+            end
             local part = instance:FindFirstChild("Head")
             if part then
                 updatePart(part, instance)
@@ -360,7 +417,7 @@ if game.PlaceId == 8657806289 then
             while true do
                 if _G.ScriptEnabled then
                     for _, obj in ipairs(workspace:GetChildren()) do
-                        if obj:FindFirstChild("Head") then
+                        if obj:FindFirstChild("Head") or obj.Name == "Detonator" or obj.Name == "BolterDetonator" then
                             processEnemy(obj)
                         end
                     end
@@ -384,7 +441,7 @@ if game.PlaceId == 8657806289 then
         billboard.Adornee = head
         billboard.Size = UDim2.new(0, 100, 0, 50)
         billboard.AlwaysOnTop = true
-        billboard.StudsOffset = Vector3.new(0, 4, 0)
+        billboard.StudsOffset = Vector3.new(0, 3, 0)
         billboard.Parent = enemy
         local textLabel = Instance.new("TextLabel", billboard)
         textLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -420,7 +477,7 @@ if game.PlaceId == 8657806289 then
 
     ------------------------------------------------
     -- Highlight ESP (Built-In)
-    -- (Modified to only highlight the enemy's torso, hands, and legs)
+    -- (Modified to highlight the enemy's torso, hands, and legs; for Bolter detonator use hitbox enlargement)
     ------------------------------------------------
     _G.HighlightESPEnabled = false
     local highlightESPObjects = {}
@@ -429,29 +486,56 @@ if game.PlaceId == 8657806289 then
     local function createHighlightESP(enemy)
         if not enemy:IsA("Model") then return end
         if highlightESPObjects[enemy] then return end
-        local partsToHighlight = {}
-        local torso = enemy:FindFirstChild("Torso") or enemy:FindFirstChild("UpperTorso") or enemy:FindFirstChild("LowerTorso")
-        if torso then table.insert(partsToHighlight, torso) end
-        if enemy:FindFirstChild("LeftHand") then table.insert(partsToHighlight, enemy.LeftHand) end
-        if enemy:FindFirstChild("RightHand") then table.insert(partsToHighlight, enemy.RightHand) end
-        if enemy:FindFirstChild("LeftLeg") then table.insert(partsToHighlight, enemy.LeftLeg) end
-        if enemy:FindFirstChild("RightLeg") then table.insert(partsToHighlight, enemy.RightLeg) end
-        if #partsToHighlight == 0 and enemy.PrimaryPart then
-            table.insert(partsToHighlight, enemy.PrimaryPart)
-        end
-        if #partsToHighlight == 0 then return end
         local hlTable = {}
-        for _, part in ipairs(partsToHighlight) do
-            local hl = Instance.new("Highlight")
-            hl.Adornee = part
-            hl.FillColor = _G.ESPColor
-            hl.OutlineColor = _G.ESPColor
-            hl.FillTransparency = 0.5
-            hl.OutlineTransparency = 0
-            hl.Parent = enemy
-            table.insert(hlTable, hl)
+        if enemy.Name == "BolterDetonator" or enemy.Name == "Detonator" then
+            local hitbox = enemy:FindFirstChild("Hitbox") or enemy:FindFirstChild("HumanoidRootPart") or enemy.PrimaryPart or enemy:FindFirstChildWhichIsA("BasePart")
+            if hitbox then
+                local hl = Instance.new("Highlight")
+                hl.Adornee = hitbox
+                hl.FillColor = _G.ESPColor
+                hl.OutlineColor = _G.ESPColor
+                hl.FillTransparency = 0.5
+                hl.OutlineTransparency = 0
+                hl.Parent = enemy
+                hlTable = {hl}
+            end
+        else
+            local function getPart(model, names)
+                for _, name in ipairs(names) do
+                    local part = model:FindFirstChild(name)
+                    if part then return part end
+                end
+                return nil
+            end
+            local partsToHighlight = {}
+            local torso = getPart(enemy, {"Torso", "UpperTorso", "LowerTorso"})
+            if torso then table.insert(partsToHighlight, torso) end
+            local leftHand = getPart(enemy, {"LeftHand", "Left Arm"})
+            if leftHand then table.insert(partsToHighlight, leftHand) end
+            local rightHand = getPart(enemy, {"RightHand", "Right Arm"})
+            if rightHand then table.insert(partsToHighlight, rightHand) end
+            local leftLeg = getPart(enemy, {"LeftLeg", "Left Leg"})
+            if leftLeg then table.insert(partsToHighlight, leftLeg) end
+            local rightLeg = getPart(enemy, {"RightLeg", "Right Leg"})
+            if rightLeg then table.insert(partsToHighlight, rightLeg) end
+            if #partsToHighlight == 0 and enemy.PrimaryPart then
+                table.insert(partsToHighlight, enemy.PrimaryPart)
+            end
+            if #partsToHighlight == 0 then return end
+            for _, part in ipairs(partsToHighlight) do
+                local hl = Instance.new("Highlight")
+                hl.Adornee = part
+                hl.FillColor = _G.ESPColor
+                hl.OutlineColor = _G.ESPColor
+                hl.FillTransparency = 0.5
+                hl.OutlineTransparency = 0
+                hl.Parent = enemy
+                table.insert(hlTable, hl)
+            end
         end
-        highlightESPObjects[enemy] = hlTable
+        if #hlTable > 0 then
+            highlightESPObjects[enemy] = hlTable
+        end
     end
     local function enableHighlightESP()
         for _, obj in ipairs(workspace:GetChildren()) do
