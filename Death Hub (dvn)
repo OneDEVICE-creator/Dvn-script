@@ -5,13 +5,15 @@ if game.PlaceId == 8657806289 then
     local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
     local Window = Rayfield:CreateWindow({
         Name = "Death Hub 😼 *V2*",
+		LoadingTitle = "Injecting Death Hub into the game 💀",
+   		LoadingSubtitle = "by DeathShot",
         Theme = "Ocean",
-        ConfigurationSaving = {
-            Enabled = true,
-            FileName = "Death Hub"
-        }
+		ConfigurationSaving = {
+			Enabled = true,
+			FolderName = "Death", -- Create a custom folder for your hub/game
+			FileName = "conpik"
+		},
     })
-    
     -- Define RunService for heartbeat events
     local RunService = game:GetService("RunService")
 
@@ -203,7 +205,7 @@ if game.PlaceId == 8657806289 then
 
     MainTab:CreateSlider({
         Name = "Tank(tank) Hitbox Size",
-        Range = {1, 5},
+        Range = {1, 10},
         Increment = 1,
         CurrentValue = 5,
         Callback = function(Value)
@@ -241,7 +243,7 @@ if game.PlaceId == 8657806289 then
 
     MainTab:CreateSlider({
         Name = "Tank Hitbox Size",
-        Range = {1, 5},
+        Range = {1, 10},
         Increment = 1,
         CurrentValue = 5,
         Callback = function(Value)
@@ -308,7 +310,6 @@ if game.PlaceId == 8657806289 then
             end
         end
 	end)
-
 
 	-----------------------------
     -- Other Script Sections (Gun Mod, ESP, etc.)
@@ -1287,6 +1288,6 @@ if game.PlaceId == 8657806289 then
 			end
 		end
 	end
-end)
 
+end)
 end
