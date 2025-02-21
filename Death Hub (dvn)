@@ -4,7 +4,7 @@ if game.PlaceId == 8657806289 then
     ------------------------------------------------------
     local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
     local Window = Rayfield:CreateWindow({
-        Name = "Death Hub 😼",
+        Name = "Death Hub 😼 *V2*",
         Theme = "Ocean",
         ConfigurationSaving = {
             Enabled = true,
