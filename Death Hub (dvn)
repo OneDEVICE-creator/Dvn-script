@@ -61,43 +61,28 @@ if game.PlaceId == 8657806289 then
         end,
     })
 
-    MainTab:CreateToggle({
-        Name = "Enable Big Heads",
-        CurrentValue = false,
-        Callback = function(Value)
-            _G.ScriptEnabled = Value
-            if Value then
-                loadBigHeads()
-                Rayfield:Notify({
-                    Title = "Big Heads",
-                    Content = "Big Heads Enabled!",
-                    Duration = 3
-                })
-            else
-                for _, v in ipairs(workspace:GetChildren()) do
-                    if v:IsA("Model") and not v:FindFirstChildOfClass("Humanoid") then
-                        if v.Name == "Detonator" or v.Name == "BolterDetonator" then
-                            local hitbox = v:FindFirstChild("Hitbox") or v:FindFirstChild("HumanoidRootPart")
-                            if hitbox and originalDetonatorSizes[v] then
-                                hitbox.Size = originalDetonatorSizes[v]
-                            end
-                        else
-                            local head = v:FindFirstChild("Head")
-                            if head then
-                                head.Size = Vector3.new(1, 1, 1)
-                                head.Transparency = 0
-                            end
-                        end
-                    end
-                end
-                Rayfield:Notify({
-                    Title = "Big Heads",
-                    Content = "Big Heads Disabled!",
-                    Duration = 3
-                })
-            end
-        end,
-    })
+		MainTab:CreateToggle({
+		Name = "Enable Big Heads",
+		CurrentValue = false,
+		Callback = function(Value)
+			_G.ScriptEnabled = Value
+			if Value then
+				loadBigHeads()
+				Rayfield:Notify({
+					Title = "Big Heads",
+					Content = "Big Heads Enabled!",
+					Duration = 3,
+				})
+			else
+				disableBigHeads()
+				Rayfield:Notify({
+					Title = "Big Heads",
+					Content = "Big Heads Disabled!",
+					Duration = 3,
+				})
+			end
+		end,
+	})
 
     -----------------------------
     -- Detonator (Coin) Modification Options --
@@ -623,16 +608,14 @@ if game.PlaceId == 8657806289 then
 		end,
 	})
 
-	------------------------------------------------
-	-- Big Heads Script Code (Without Extra Code) --
-	------------------------------------------------
-	local originalDetonatorSizes = {}
+
 	function loadBigHeads()
 		if not game:IsLoaded() then
 			game.Loaded:Wait()
 		end
-		_G.ScriptEnabled = _G.ScriptEnabled or true
+		_G.ScriptEnabled = _G.ScriptEnabled
 		local hookedParts = {}
+
 		local function enforceTransparency(part)
 			if hookedParts[part] then return end
 			hookedParts[part] = true
@@ -642,65 +625,68 @@ if game.PlaceId == 8657806289 then
 				end
 			end)
 		end
+
 		local function updatePart(part, instance)
 			if not part then return end
-			if _G.ScriptEnabled then
-				part.Transparency = _G.Transparency or 0.9
-				enforceTransparency(part)
-				if instance.Name == "Jetpacker" then
-					part.Size = Vector3.new(5, 5, 5)
-				elseif instance.Name == "Sniper" then
-					part.Size = Vector3.new(_G.SniperHeadSize or 6, _G.SniperHeadSize or 6, _G.SniperHeadSize or 6)
-				elseif instance.Name == "Prometheus" then
-					part.Size = Vector3.new(_G.PrometheusHeadSize or 6, _G.PrometheusHeadSize or 6, _G.PrometheusHeadSize or 6)
-				else
-					part.Size = Vector3.new(_G.EnemiesHeadSize or 8, _G.EnemiesHeadSize or 8, _G.EnemiesHeadSize or 8)
+
+			task.spawn(function() -- Runs in the background to update in real time
+				while _G.ScriptEnabled and part and part.Parent do
+					part.Transparency = _G.Transparency or 0.9
+					enforceTransparency(part)
+
+					if instance.Name == "Jetpacker" then
+						part.Size = Vector3.new(5, 5, 5)
+					elseif instance.Name == "Sniper" then
+						part.Size = Vector3.new(_G.SniperHeadSize or 6, _G.SniperHeadSize or 6, _G.SniperHeadSize or 6)
+					elseif instance.Name == "Prometheus" then
+						part.Size = Vector3.new(_G.PrometheusHeadSize or 6, _G.PrometheusHeadSize or 6, _G.PrometheusHeadSize or 6)
+					else
+						part.Size = Vector3.new(_G.EnemiesHeadSize or 8, _G.EnemiesHeadSize or 8, _G.EnemiesHeadSize or 8)
+					end
+					
+					part.Massless = true
+					part.CanCollide = false
+					task.wait(0.1) -- Small delay to reduce performance impact
 				end
-				part.Massless = true
-				part.CanCollide = false
-			else
-				part.Size = Vector3.new(1, 1, 1)
-				part.Transparency = 0
-			end
+			end)
 		end
+
 		local function processEnemy(instance)
 			if instance.Name == "APU" or not enemyNamesSet[instance.Name] then return end
-			if instance.Name == "BolterDetonator" or instance.Name == "Detonator" then
-				local hitbox = instance:FindFirstChild("Hitbox") or instance:FindFirstChild("HumanoidRootPart") or instance.PrimaryPart or instance:FindFirstChildWhichIsA("BasePart")
-				if hitbox then
-					if not originalDetonatorSizes[instance] then
-						originalDetonatorSizes[instance] = hitbox.Size
-					end
-					hitbox.Size = originalDetonatorSizes[instance] * (_G.DetonatorHitboxEnlarged and 999999 or 1)
-				end
-				return
-			end
 			local part = instance:FindFirstChild("Head")
 			if part then
 				updatePart(part, instance)
 			end
 		end
+
 		for _, obj in ipairs(workspace:GetChildren()) do
 			processEnemy(obj)
 			task.wait(0.01)
 		end
+
 		workspace.ChildAdded:Connect(function(child)
 			task.wait(0.05)
 			processEnemy(child)
-		end)
-		task.spawn(function()
-			while true do
-				if _G.ScriptEnabled then
-					for _, obj in ipairs(workspace:GetChildren()) do
-						if obj:FindFirstChild("Head") or obj.Name == "Detonator" or obj.Name == "BolterDetonator" then
-							processEnemy(obj)
-						end
-					end
-				end
-				task.wait(1)
-			end
+			task.wait(1)
 		end)
 	end
+
+	function disableBigHeads()
+		_G.ScriptEnabled = false
+		for _, obj in ipairs(workspace:GetChildren()) do
+			if game.Players.LocalPlayer and obj == game.Players.LocalPlayer.Character then
+				-- Skip the player's character.
+			else
+				local head = obj:FindFirstChild("Head")
+				if head then
+					head.Size = Vector3.new(1, 1, 1)    -- Reset to default size.
+					head.Transparency = 0              -- Fully opaque.
+				end
+			end
+		end
+	end
+
+
 
 	------------------------------------------------
 	-- Billboard ESP (Text ESP) Using BillboardGui --
@@ -890,6 +876,7 @@ if game.PlaceId == 8657806289 then
 	------------------------------------------------
 	local infantryESP_enabled = false
 	local infantryESP_HighlightColor = _G.ESPColor
+	-- Use a nested table: [model] = { [part] = highlight, ... }
 	local infantryESP_highlightedObjects = {}
 
 	local infantryNames = {
@@ -910,19 +897,23 @@ if game.PlaceId == 8657806289 then
 	}
 
 	local function infantry_removeAllHighlights()
-		for model, highlight in pairs(infantryESP_highlightedObjects) do
-			if highlight and highlight.Parent then
-				highlight:Destroy()
+		for model, partsTable in pairs(infantryESP_highlightedObjects) do
+			for part, highlight in pairs(partsTable) do
+				if highlight and highlight.Parent then
+					highlight:Destroy()
+				end
 			end
 		end
 		infantryESP_highlightedObjects = {}
 	end
 
 	local function infantry_updateAllHighlights()
-		for _, highlight in pairs(infantryESP_highlightedObjects) do
-			if highlight then
-				highlight.FillColor = infantryESP_HighlightColor
-				highlight.OutlineColor = infantryESP_HighlightColor
+		for model, partsTable in pairs(infantryESP_highlightedObjects) do
+			for part, highlight in pairs(partsTable) do
+				if highlight then
+					highlight.FillColor = infantryESP_HighlightColor
+					highlight.OutlineColor = infantryESP_HighlightColor
+				end
 			end
 		end
 	end
@@ -936,16 +927,22 @@ if game.PlaceId == 8657806289 then
 		if not infantryESP_enabled then return end
 		if obj and obj.Parent and obj.Parent:IsA("Model") then
 			local model = obj.Parent
-			if obj:IsA("Part") and obj.Name ~= "Head" and infantryNames[model.Name] then
-				if not infantryESP_highlightedObjects[model] then
-					local highlight = Instance.new("Highlight")
-					highlight.Parent = model
-					highlight.Adornee = model
-					highlight.FillTransparency = _G.ESPHighlightFillTransparency
-					highlight.OutlineTransparency = _G.ESPHighlightOutlineTransparency
-					highlight.FillColor = infantryESP_HighlightColor
-					highlight.OutlineColor = infantryESP_HighlightColor
-					infantryESP_highlightedObjects[model] = highlight
+			if infantryNames[model.Name] then
+				-- Only create a highlight for parts not named "Head"
+				if obj:IsA("Part") and obj.Name ~= "Head" then
+					if not infantryESP_highlightedObjects[model] then
+						infantryESP_highlightedObjects[model] = {}
+					end
+					if not infantryESP_highlightedObjects[model][obj] then
+						local highlight = Instance.new("Highlight")
+						highlight.Parent = model
+						highlight.Adornee = obj
+						highlight.FillTransparency = _G.ESPHighlightFillTransparency
+						highlight.OutlineTransparency = _G.ESPHighlightOutlineTransparency
+						highlight.FillColor = infantryESP_HighlightColor
+						highlight.OutlineColor = infantryESP_HighlightColor
+						infantryESP_highlightedObjects[model][obj] = highlight
+					end
 				end
 			end
 		end
@@ -961,7 +958,11 @@ if game.PlaceId == 8657806289 then
 	workspace.DescendantRemoving:Connect(function(descendant)
 		if descendant:IsA("Model") and infantryNames[descendant.Name] then
 			if infantryESP_highlightedObjects[descendant] then
-				infantryESP_highlightedObjects[descendant]:Destroy()
+				for part, highlight in pairs(infantryESP_highlightedObjects[descendant]) do
+					if highlight then
+						highlight:Destroy()
+					end
+				end
 				infantryESP_highlightedObjects[descendant] = nil
 			end
 		end
@@ -1247,4 +1248,45 @@ if game.PlaceId == 8657806289 then
             end
         end,
     })
+
+	local RunService = game:GetService("RunService")
+
+	RunService.Heartbeat:Connect(function()
+	-- Update Text ESP transparency in real time
+	for enemy, billboard in pairs(billboardESPObjects) do
+		local textLabel = billboard:FindFirstChildOfClass("TextLabel")
+		if textLabel then
+			textLabel.TextTransparency = _G.ESPTextTransparency
+		end
+	end
+
+	-- Update Mech ESP transparency in real time
+	for _, highlight in pairs(mechESP_highlightedObjects) do
+		if highlight then
+			highlight.FillTransparency = _G.ESPHighlightFillTransparency
+			highlight.OutlineTransparency = _G.ESPHighlightOutlineTransparency
+		end
+	end
+
+	-- Update Infantry ESP transparency in real time
+	for _, partsTable in pairs(infantryESP_highlightedObjects) do
+		for _, hl in pairs(partsTable) do
+			if hl then
+				hl.FillTransparency = _G.ESPHighlightFillTransparency
+				hl.OutlineTransparency = _G.ESPHighlightOutlineTransparency
+			end
+		end
+	end
+
+	-- Update Boss ESP transparency in real time
+	for _, partsTable in pairs(bossESP_highlightedObjects) do
+		for _, hl in pairs(partsTable) do
+			if hl then
+				hl.FillTransparency = _G.ESPHighlightFillTransparency
+				hl.OutlineTransparency = _G.ESPHighlightOutlineTransparency
+			end
+		end
+	end
+end)
+
 end
