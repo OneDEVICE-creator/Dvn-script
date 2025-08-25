@@ -1,0 +1,65 @@
+-- esp.lua (separate file)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+local ESP = {}
+ESP.Enabled = true
+ESP.Boxes = {}
+ESP.Color = Color3.fromRGB(0, 255, 0)
+ESP.Thickness = 2
+ESP.Transparency = 1
+
+-- Function to create a box for a player
+local function createBox(player)
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local box = Drawing.new("Square")
+        box.Color = ESP.Color
+        box.Thickness = ESP.Thickness
+        box.Filled = false
+        box.Transparency = ESP.Transparency
+        ESP.Boxes[player] = box
+    end
+end
+
+-- Remove box when player leaves
+Players.PlayerRemoving:Connect(function(player)
+    if ESP.Boxes[player] then
+        ESP.Boxes[player]:Remove()
+        ESP.Boxes[player] = nil
+    end
+end)
+
+-- Update loop
+RunService.RenderStepped:Connect(function()
+    if not ESP.Enabled then
+        for _, box in pairs(ESP.Boxes) do
+            box.Visible = false
+        end
+        return
+    end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = player.Character.HumanoidRootPart
+            local pos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(hrp.Position)
+
+            if not ESP.Boxes[player] then
+                createBox(player)
+            end
+
+            local box = ESP.Boxes[player]
+            if onScreen then
+                local size = Vector2.new(2000 / pos.Z, 3000 / pos.Z) -- size scales with distance
+                box.Size = size
+                box.Position = Vector2.new(pos.X - size.X/2, pos.Y - size.Y/2)
+                box.Color = ESP.Color
+                box.Visible = true
+            else
+                box.Visible = false
+            end
+        end
+    end
+end)
+
+return ESP
